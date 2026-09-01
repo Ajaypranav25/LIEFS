@@ -246,14 +246,11 @@ class ContinuousBatchScheduler:
             if not self.active_slots:
                 break
 
-            # Step 2: Prefill new requests
+            # Step 2 & 3: One forward pass per active request
             for req in self.active_slots:
                 if req.status == RequestStatus.PREFILLING:
                     self._prefill_request(req)
-
-            # Step 3: One decode step per active request
-            for req in self.active_slots:
-                if req.status == RequestStatus.GENERATING:
+                elif req.status == RequestStatus.GENERATING:
                     self._decode_step(req)
 
             # Step 4: Remove finished, free slots for new requests

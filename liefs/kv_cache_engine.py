@@ -204,6 +204,8 @@ class KVCacheEngine:
                 break
 
             generated_ids.append(next_token_id)
+            if len(generated_ids) >= max_new_tokens:
+                break
 
             # Prepare the single new token for the next forward pass
             next_token_tensor = torch.tensor(

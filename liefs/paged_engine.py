@@ -160,6 +160,8 @@ class PagedEngine:
                     break
 
                 generated_ids.append(next_token_id)
+                if len(generated_ids) >= max_new_tokens:
+                    break
 
                 next_token_tensor = torch.tensor(
                     [[next_token_id]], device=input_ids.device, dtype=input_ids.dtype

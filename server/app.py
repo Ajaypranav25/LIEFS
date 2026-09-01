@@ -108,7 +108,7 @@ async def create_completion(request: CompletionRequest):
     
     # Determine finish reason
     finish_reason = "length"
-    if len(generated_ids) < request.max_tokens or (generated_ids and generated_ids[-1] in engine.eos_token_ids):
+    if len(generated_ids) < request.max_tokens:
         finish_reason = "stop"
         
     usage = CompletionUsage(
