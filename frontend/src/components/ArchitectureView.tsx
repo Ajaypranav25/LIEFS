@@ -28,7 +28,7 @@ export const ArchitectureView: React.FC = () => {
   const maxConcurrentRequests = Math.floor((gpuVramGb * 1024 * 0.7) / memoryPerReqMb); // Assuming 70% available for KV
 
   return (
-    <div className="pt-20 px-4 sm:px-8 max-w-[1440px] mx-auto pb-12 space-y-8 font-mono">
+    <div className="pt-6 px-4 sm:px-8 max-w-[1440px] mx-auto pb-12 space-y-8 font-mono">
       {/* Header */}
       <div className="cyber-card p-6 rounded-lg">
         <h2 className="text-lg font-bold text-primary flex items-center gap-2">

@@ -90,3 +90,21 @@ export interface SavedBenchmarkRun {
   device: string;
   results: BenchmarkResult[];
 }
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp: number;
+  engine?: string;
+  metrics?: GenerationMetrics;
+  isStreaming?: boolean;
+}
+
+export interface ChatSession {
+  id: string;
+  title: string;
+  createdAt: number;
+  messages: ChatMessage[];
+  engine: string;
+}

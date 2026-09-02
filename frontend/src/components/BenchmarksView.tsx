@@ -145,7 +145,7 @@ export const BenchmarksView: React.FC<BenchmarksViewProps> = ({ serverOnline }) 
   };
 
   return (
-    <div className="pt-20 px-4 sm:px-8 max-w-[1440px] mx-auto pb-12 space-y-6">
+    <div className="pt-6 px-4 sm:px-8 max-w-[1440px] mx-auto pb-12 space-y-6">
       {/* Top Header & Scale Toggle Bar */}
       <div className="cyber-card p-5 rounded-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
