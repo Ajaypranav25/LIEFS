@@ -191,10 +191,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
               key={msg.id}
               className={`flex gap-3.5 w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              {/* Assistant Avatar */}
+              {/* Assistant Avatar - Matches Top-Left Logo */}
               {msg.role === 'assistant' && (
-                <div className="w-8 h-8 rounded-xl bg-primary-container border border-primary/40 flex items-center justify-center shrink-0 mt-0.5 shadow-glow-cyan">
-                  <Cpu className="w-4 h-4 text-slate-950" />
+                <div className="w-8 h-8 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center text-primary shadow-glow-cyan shrink-0 mt-0.5">
+                  <Cpu className="w-4.5 h-4.5 text-primary" />
                 </div>
               )}
 
@@ -349,10 +349,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   <button
                     onClick={handleSend}
                     disabled={!inputText.trim() || !serverOnline}
-                    className="p-2 rounded-xl bg-primary text-slate-950 hover:bg-primary-light disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-glow-cyan flex items-center justify-center h-8 w-8 cursor-pointer"
+                    className={`p-2 rounded-xl transition-all flex items-center justify-center h-8 w-8 ${
+                      inputText.trim() && serverOnline
+                        ? 'bg-primary text-slate-950 hover:bg-primary-light shadow-glow-cyan cursor-pointer active:scale-95'
+                        : 'bg-surface-high border border-outline-variant/60 text-on-surface-variant/80 hover:text-primary hover:border-primary/50 cursor-not-allowed'
+                    }`}
                     title="Send message"
                   >
-                    <Send className="w-4 h-4 fill-current" />
+                    <Send className={`w-4 h-4 ${inputText.trim() ? 'fill-current' : ''}`} />
                   </button>
                 )}
               </div>
