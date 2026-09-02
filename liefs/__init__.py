@@ -8,7 +8,15 @@ from liefs.paged_attention import BlockAllocator, PagedKVCache, KVBlock
 from liefs.paged_engine import PagedEngine
 from liefs.quantization import QuantizedLinear, quantize_model
 from liefs.quantized_engine import create_quantized_engine
-from liefs.utils import GenerationMetrics, cuda_timer, get_peak_vram_mb, reset_vram_stats, print_metrics
+from liefs.utils import (
+    GenerationMetrics,
+    compute_generation_metrics,
+    cuda_timer,
+    get_eos_token_ids,
+    get_peak_vram_mb,
+    print_metrics,
+    reset_vram_stats,
+)
 
 __all__ = [
     "load_model_and_tokenizer",
@@ -26,6 +34,8 @@ __all__ = [
     "quantize_model",
     "create_quantized_engine",
     "GenerationMetrics",
+    "compute_generation_metrics",
+    "get_eos_token_ids",
     "cuda_timer",
     "get_peak_vram_mb",
     "reset_vram_stats",

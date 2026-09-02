@@ -79,6 +79,53 @@ def reset_vram_stats():
     torch.cuda.reset_peak_memory_stats()
 
 
+def get_eos_token_ids(tokenizer) -> set[int]:
+    """Extract all relevant EOS token IDs for generation termination.
+
+    Includes standard tokenizer.eos_token_id and chat turn terminators (e.g. <|im_end|>).
+    """
+    eos_ids: set[int] = set()
+    if tokenizer.eos_token_id is not None:
+        eos_ids.add(tokenizer.eos_token_id)
+    im_end_id = tokenizer.convert_tokens_to_ids("<|im_end|>")
+    if isinstance(im_end_id, int) and im_end_id != tokenizer.unk_token_id:
+        eos_ids.add(im_end_id)
+    return eos_ids
+
+
+def compute_generation_metrics(
+    token_times_ms: list[float], num_generated: int
+) -> GenerationMetrics:
+    """Compute generation metrics from per-token timing data.
+
+    Args:
+        token_times_ms: List of durations (in ms) for each step (index 0 is prefill/TTFT).
+        num_generated: Total number of generated tokens.
+    """
+    if not token_times_ms:
+        return GenerationMetrics()
+
+    total_time = sum(token_times_ms)
+    ttft = token_times_ms[0]
+
+    # TPOT: average decode time (excludes prefill)
+    if len(token_times_ms) > 1:
+        tpot = sum(token_times_ms[1:]) / (len(token_times_ms) - 1)
+    else:
+        tpot = 0.0
+
+    tokens_per_sec = (num_generated / total_time * 1000.0) if total_time > 0 else 0.0
+
+    return GenerationMetrics(
+        ttft_ms=ttft,
+        tpot_ms=tpot,
+        tokens_per_sec=tokens_per_sec,
+        total_tokens_generated=num_generated,
+        total_time_ms=total_time,
+        peak_vram_mb=get_peak_vram_mb(),
+    )
+
+
 def print_metrics(metrics: GenerationMetrics, label: str = ""):
     """Pretty-print generation metrics."""
     header = f"=== {label} ===" if label else "=== Generation Metrics ==="

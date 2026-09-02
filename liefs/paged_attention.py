@@ -1,56 +1,11 @@
 """
 Stage 4: Simplified paged attention — block-based KV-cache storage.
-
-THE PROBLEM: MEMORY FRAGMENTATION
-===================================
-
-In Stages 2-3, each sequence's KV-cache is a single contiguous tensor.
-When sequences have different lengths, this causes two problems:
-
-1. EXTERNAL FRAGMENTATION: After some sequences finish and free their cache,
-   the freed memory may be scattered in small non-contiguous chunks. A new
-   sequence needing a large cache may fail to allocate even though total
-   free memory is sufficient.
-
-2. OVER-ALLOCATION: To avoid reallocation, you must pre-allocate for the
-   maximum possible sequence length. A sequence that generates only 10
-   tokens still reserves memory for max_seq_len tokens — wasted space.
-
-THE SOLUTION: PAGING (inspired by OS virtual memory)
-=====================================================
-
-Just like an OS maps virtual addresses to physical page frames:
-
-    OS Virtual Memory              KV-Cache Paging
-    ─────────────────              ──────────────────
-    Virtual page number     →      Logical token position
-    Physical page frame     →      Physical KV block in GPU memory
-    Page table              →      Block table (per sequence)
-    Page fault              →      Allocate new block on demand
-    Page free               →      Return block to free pool
-
-We split the KV-cache into fixed-size BLOCKS (e.g., 16 tokens each).
-Each block stores the K and V tensors for a fixed number of token positions
-across all layers. A "block table" per sequence maps logical block indices
-to physical block objects.
-
-Benefits:
-- No external fragmentation (all blocks are the same size)
-- No over-allocation (blocks allocated on demand, one at a time)
-- Easy memory accounting (free_blocks * tokens_per_block = available tokens)
-- Enables memory sharing (e.g., prompt prefix blocks shared across sequences)
-
-SIMPLIFICATION vs PRODUCTION (vLLM):
-- vLLM uses custom CUDA kernels for paged attention (flash_attn with block tables).
-  We store blocks as regular tensors and gather/scatter with Python indexing.
-- vLLM supports copy-on-write sharing of prefix blocks across sequences.
-- vLLM uses a more sophisticated block allocator with swap space (CPU offloading).
-- Our implementation demonstrates the CONCEPT but doesn't achieve the same
-  throughput as vLLM's CUDA kernels.
 """
 
-import torch
 from dataclasses import dataclass
+from typing import Optional
+
+import torch
 
 
 @dataclass
@@ -59,10 +14,6 @@ class KVBlock:
 
     Stores K and V tensors for up to `block_size` token positions
     across all layers.
-
-    Layout per block:
-        key_cache:   (num_layers, num_kv_heads, block_size, head_dim)
-        value_cache: (num_layers, num_kv_heads, block_size, head_dim)
     """
     block_id: int
     block_size: int
@@ -80,13 +31,7 @@ class KVBlock:
 
 
 class BlockAllocator:
-    """Manages a pool of fixed-size KV-cache blocks on GPU.
-
-    Analogous to the OS physical memory manager:
-    - Maintains a free list of available blocks
-    - Allocates blocks on demand
-    - Returns freed blocks to the pool
-    """
+    """Manages a pool of fixed-size KV-cache blocks on GPU."""
 
     def __init__(
         self,
@@ -106,7 +51,6 @@ class BlockAllocator:
         self.device = device
         self.dtype = dtype
 
-        # Pre-allocate all blocks upfront (like a memory pool)
         self.blocks: list[KVBlock] = []
         self.free_block_ids: list[int] = list(range(num_blocks))
 
@@ -125,7 +69,6 @@ class BlockAllocator:
             )
             self.blocks.append(block)
 
-        # Calculate memory usage
         bytes_per_block = 2 * num_layers * num_kv_heads * block_size * head_dim * 2
         self.total_memory_mb = num_blocks * bytes_per_block / (1024 * 1024)
 
@@ -159,11 +102,7 @@ class BlockAllocator:
 
 
 class PagedKVCache:
-    """Paged KV-cache for a single sequence.
-
-    Manages a block table that maps logical token positions to physical blocks.
-    New blocks are allocated on demand as the sequence grows.
-    """
+    """Paged KV-cache for a single sequence."""
 
     def __init__(self, allocator: BlockAllocator):
         self.allocator = allocator
@@ -190,7 +129,6 @@ class PagedKVCache:
             block_idx = tok_idx // self.block_size
             pos_in_block = tok_idx % self.block_size
 
-            # Allocate new blocks if needed
             while block_idx >= len(self.block_table):
                 new_block = self.allocator.allocate()
                 if new_block is None:
@@ -203,19 +141,13 @@ class PagedKVCache:
 
         self.tokens_per_layer[layer_idx] += new_tokens
 
-        # Update block filled counts based on total tokens across all layers
         min_toks = min(self.tokens_per_layer)
         for i, b in enumerate(self.block_table):
             filled_in_block = max(0, min(self.block_size, min_toks - i * self.block_size))
             b.num_filled = filled_in_block
 
-    def get_kv(self, layer_idx: int) -> tuple[torch.Tensor, torch.Tensor]:
-        """Retrieve all cached K/V for a given layer by gathering from blocks.
-
-        Returns:
-            (key_cache, value_cache) each of shape
-            (1, num_kv_heads, total_tokens, head_dim)
-        """
+    def get_kv(self, layer_idx: int) -> tuple[Optional[torch.Tensor], Optional[torch.Tensor]]:
+        """Retrieve all cached K/V for a given layer by gathering from blocks."""
         total = self.total_tokens
         if total == 0 or not self.block_table:
             return None, None

@@ -66,6 +66,7 @@ def format_chat_prompt(
     tokenizer: AutoTokenizer,
     user_message: str,
     system_message: str = "You are a helpful assistant.",
+    device: str | torch.device = "cuda",
 ) -> torch.Tensor:
     """Format a user message using the model's chat template and tokenize.
 
@@ -80,9 +81,10 @@ def format_chat_prompt(
         tokenizer: The loaded tokenizer.
         user_message: The user's prompt text.
         system_message: System prompt. Default is a simple assistant prompt.
+        device: Target device for output tensor. Default "cuda".
 
     Returns:
-        Token IDs as a tensor of shape (1, seq_len) on the model's device.
+        Token IDs as a tensor of shape (1, seq_len) on the requested device.
     """
     messages = [
         {"role": "system", "content": system_message},
@@ -99,4 +101,4 @@ def format_chat_prompt(
         return_tensors="pt",
     )
 
-    return input_ids.to("cuda")
+    return input_ids.to(device)
