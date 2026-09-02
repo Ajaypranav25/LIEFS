@@ -3,8 +3,29 @@ import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { ChatView } from './components/ChatView';
 import { ModelAnalysisView } from './components/ModelAnalysisView';
-import { fetchHealth, fetchSystemInfo, streamCompletion } from './lib/api';
-import type { SystemInfo, ChatSession, ChatMessage, GenerationMetrics } from './types';
+import { ModelLoaderModal } from './components/ModelLoaderModal';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import {
+  fetchHealth,
+  fetchSystemInfo,
+  fetchHardwareInfo,
+  fetchCurrentModel,
+  streamCompletion,
+} from './lib/api';
+import {
+  fetchUserChatSessions,
+  saveChatSessionToDb,
+  saveChatMessageToDb,
+  deleteChatSessionFromDb,
+} from './lib/supabase';
+import type {
+  SystemInfo,
+  HardwareProfile,
+  ModelArchitectureMetadata,
+  ChatSession,
+  ChatMessage,
+  GenerationMetrics,
+} from './types';
 
 const INITIAL_SESSIONS: ChatSession[] = [
   {
@@ -22,7 +43,7 @@ const INITIAL_SESSIONS: ChatSession[] = [
       {
         id: 'msg-2',
         role: 'assistant',
-        content: `In autoregressive generation, each new token requires attending to all prior tokens.\n\n### Without KV-Cache (Stage 1 Naive Baseline):\nAt step $t$, the full sequence $x_{1:t}$ is passed through all transformer layers. Keys and values for all past tokens $1 \\dots t-1$ are **recomputed from scratch**, leading to total compute complexity:\n\\[ \\sum_{t=1}^N \\mathcal{O}(t) = \\mathcal{O}(N^2) \\]\n\n### With KV-Cache (Stage 2 Optimized):\nWe store past Keys ($K_{1:t-1}$) and Values ($V_{1:t-1}$) in GPU VRAM. At step $t$, we only pass the single newly generated token $x_t$ through the model, compute $(q_t, k_t, v_t)$, append $k_t, v_t$ to the cache, and compute attention in $\\mathcal{O}(1)$ query vector operations.\n\nTotal generation complexity drops to:\n\\[ \\sum_{t=1}^N \\mathcal{O}(1) = \\mathcal{O}(N) \\]\n\nThis yields a **3.5x to 8x throughput speedup** on Qwen2.5-0.5B on CUDA.`,
+        content: `In autoregressive generation, each new token requires attending to all prior tokens.\n\n### Without KV-Cache (Stage 1 Naive Baseline):\nAt step $t$, the full sequence $x_{1:t}$ is passed through all transformer layers. Keys and values for all past tokens $1 \\dots t-1$ are **recomputed from scratch**, leading to total compute complexity:\n\\[ \\sum_{t=1}^N \\mathcal{O}(t) = \\mathcal{O}(N^2) \\]\n\n### With KV-Cache (Stage 2 Optimized):\nWe store past Keys ($K_{1:t-1}$) and Values ($V_{1:t-1}$) in GPU VRAM. At step $t$, we only pass the single newly generated token $x_t$ through the model, compute $(q_t, k_t, v_t)$, append $k_t, v_t$ to the cache, and compute attention in $\\mathcal{O}(1)$ query vector operations.\n\nTotal generation complexity drops to:\n\\[ \\sum_{t=1}^N \\mathcal{O}(1) = \\mathcal{O}(N) \\]\n\nThis yields a **3.5x to 8x throughput speedup** on local consumer GPUs.`,
         timestamp: Date.now() - 3590000,
         engine: 'KV-Cache (Stage 2)',
         metrics: {
@@ -39,7 +60,8 @@ const INITIAL_SESSIONS: ChatSession[] = [
   },
 ];
 
-export const App: React.FC = () => {
+const AppContent: React.FC = () => {
+  const { user } = useAuth();
   const [activeView, setActiveView] = useState<'chat' | 'analysis'>('chat');
   const [sessions, setSessions] = useState<ChatSession[]>(() => {
     try {
@@ -55,13 +77,35 @@ export const App: React.FC = () => {
   const [selectedEngine, setSelectedEngine] = useState<string>('kv_cache');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+  const [isModelLoaderOpen, setIsModelLoaderOpen] = useState<boolean>(false);
 
-  // System & Health State
+  // System, Hardware & Model State
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
+  const [hardware, setHardware] = useState<HardwareProfile | null>(null);
+  const [modelMeta, setModelMeta] = useState<ModelArchitectureMetadata | null>(null);
   const [serverOnline, setServerOnline] = useState<boolean>(true);
 
   // Cancel generation reference
   const cancelStreamRef = useRef<(() => void) | null>(null);
+
+  // Load user's chat sessions from Supabase when signed in
+  useEffect(() => {
+    const syncUserSessions = async () => {
+      try {
+        const cloudSessions = await fetchUserChatSessions(user?.id);
+        if (cloudSessions && cloudSessions.length > 0) {
+          setSessions(cloudSessions);
+          if (!cloudSessions.some((s) => s.id === activeSessionId)) {
+            setActiveSessionId(cloudSessions[0].id);
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to sync cloud sessions:', e);
+      }
+    };
+
+    syncUserSessions();
+  }, [user?.id]);
 
   // Sync sessions to localStorage
   useEffect(() => {
@@ -71,6 +115,23 @@ export const App: React.FC = () => {
       console.warn('Failed to persist sessions:', e);
     }
   }, [sessions]);
+
+  // Initial Hardware and Model Profile Fetch
+  useEffect(() => {
+    const fetchEnv = async () => {
+      try {
+        const [hw, meta] = await Promise.all([
+          fetchHardwareInfo().catch(() => null),
+          fetchCurrentModel().catch(() => null),
+        ]);
+        if (hw) setHardware(hw);
+        if (meta) setModelMeta(meta);
+      } catch (e) {
+        console.warn('Failed to fetch environment:', e);
+      }
+    };
+    fetchEnv();
+  }, []);
 
   // Telemetry Polling Loop
   useEffect(() => {
@@ -98,16 +159,22 @@ export const App: React.FC = () => {
       title: 'New Conversation',
       createdAt: Date.now(),
       engine: selectedEngine,
+      user_id: user?.id,
       messages: [],
     };
     setSessions([newSession, ...sessions]);
     setActiveSessionId(newSession.id);
     setActiveView('chat');
     setSidebarOpen(false);
+
+    // Save new session to Supabase
+    saveChatSessionToDb(newSession, user?.id).catch(console.warn);
   };
 
   const handleDeleteSession = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    deleteChatSessionFromDb(id).catch(console.warn);
+
     const filtered = sessions.filter((s) => s.id !== id);
     if (filtered.length === 0) {
       const fresh: ChatSession = {
@@ -115,10 +182,12 @@ export const App: React.FC = () => {
         title: 'New Conversation',
         createdAt: Date.now(),
         engine: selectedEngine,
+        user_id: user?.id,
         messages: [],
       };
       setSessions([fresh]);
       setActiveSessionId(fresh.id);
+      saveChatSessionToDb(fresh, user?.id).catch(console.warn);
     } else {
       setSessions(filtered);
       if (activeSessionId === id) {
@@ -153,20 +222,22 @@ export const App: React.FC = () => {
         ? userText.slice(0, 30) + (userText.length > 30 ? '...' : '')
         : currentSession.title;
 
+    const updatedSession: ChatSession = {
+      ...currentSession,
+      title: updatedTitle,
+      user_id: user?.id,
+      messages: [...currentSession.messages, userMsg, assistantMsgPlaceholder],
+    };
+
     setSessions((prev) =>
-      prev.map((s) => {
-        if (s.id === currentSession.id) {
-          return {
-            ...s,
-            title: updatedTitle,
-            messages: [...s.messages, userMsg, assistantMsgPlaceholder],
-          };
-        }
-        return s;
-      })
+      prev.map((s) => (s.id === currentSession.id ? updatedSession : s))
     );
 
     setIsGenerating(true);
+
+    // Save session metadata and user message to Supabase
+    saveChatSessionToDb(updatedSession, user?.id).catch(console.warn);
+    saveChatMessageToDb(currentSession.id, userMsg, user?.id).catch(console.warn);
 
     let fullText = '';
 
@@ -224,27 +295,33 @@ export const App: React.FC = () => {
             );
           },
           onDone: (completedText: string, finalMetrics: GenerationMetrics) => {
+            const finalAssistantMsg: ChatMessage = {
+              id: assistantMsgId,
+              role: 'assistant',
+              content: completedText || fullText,
+              timestamp: Date.now(),
+              engine,
+              metrics: finalMetrics,
+              isStreaming: false,
+            };
+
             setSessions((prev) =>
               prev.map((s) => {
                 if (s.id === currentSession.id) {
                   return {
                     ...s,
-                    messages: s.messages.map((m) => {
-                      if (m.id === assistantMsgId) {
-                        return {
-                          ...m,
-                          content: completedText || fullText,
-                          metrics: finalMetrics,
-                          isStreaming: false,
-                        };
-                      }
-                      return m;
-                    }),
+                    messages: s.messages.map((m) =>
+                      m.id === assistantMsgId ? finalAssistantMsg : m
+                    ),
                   };
                 }
                 return s;
               })
             );
+
+            // Persist complete assistant response to Supabase
+            saveChatMessageToDb(currentSession.id, finalAssistantMsg, user?.id).catch(console.warn);
+
             setIsGenerating(false);
             cancelStreamRef.current = null;
           },
@@ -274,7 +351,7 @@ export const App: React.FC = () => {
 
   return (
     <div className="h-screen w-screen flex overflow-hidden bg-background text-on-background font-sans">
-      {/* ChatGPT / Gemini Style Left Sidebar */}
+      {/* Sidebar */}
       <Sidebar
         activeView={activeView}
         setActiveView={setActiveView}
@@ -293,18 +370,21 @@ export const App: React.FC = () => {
         setIsOpen={setSidebarOpen}
       />
 
-      {/* Main Content Area (16:9 Laptop Ratio Canvas) */}
+      {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-        {/* Top Header */}
+        {/* Header */}
         <Header
           activeView={activeView}
           setActiveView={setActiveView}
           systemInfo={systemInfo}
+          hardware={hardware}
+          modelMeta={modelMeta}
           serverOnline={serverOnline}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+          onOpenModelLoader={() => setIsModelLoaderOpen(true)}
         />
 
-        {/* View Switcher: AI Chat vs Model Analysis */}
+        {/* View Switcher: AI Chat vs Universal Model Analysis & Benchmarks */}
         {activeView === 'chat' ? (
           <ChatView
             messages={messages}
@@ -319,11 +399,35 @@ export const App: React.FC = () => {
         ) : (
           <ModelAnalysisView
             serverOnline={serverOnline}
+            hardware={hardware}
+            modelMeta={modelMeta}
             onBackToChat={() => setActiveView('chat')}
+            onOpenModelLoader={() => setIsModelLoaderOpen(true)}
           />
         )}
       </div>
+
+      {/* Custom Model Importer & Hub Modal */}
+      <ModelLoaderModal
+        isOpen={isModelLoaderOpen}
+        onClose={() => setIsModelLoaderOpen(false)}
+        currentModelName={modelMeta?.model_name || systemInfo?.model_name || 'Qwen/Qwen2.5-0.5B-Instruct'}
+        onModelLoaded={(meta) => {
+          setModelMeta(meta);
+          // Refresh system info
+          fetchSystemInfo().then(setSystemInfo).catch(console.warn);
+          fetchHardwareInfo().then(setHardware).catch(console.warn);
+        }}
+      />
     </div>
+  );
+};
+
+export const App: React.FC = () => {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 };
 

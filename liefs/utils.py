@@ -1,17 +1,13 @@
 """
 Timing and logging utilities for LIEFS.
 
-Design note: We wrap all GPU timing with torch.cuda.synchronize() because
-CUDA operations are *asynchronous* — the CPU queues work on the GPU and
-returns immediately. Without synchronize(), time.perf_counter() measures
-how fast the CPU can *enqueue* work, not how fast the GPU *executes* it.
-This is a classic benchmarking pitfall.
+Provides GPU and CPU synchronized timers, memory peak tracking,
+and multi-architecture EOS token resolution.
 """
 
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-
 import torch
 
 
@@ -20,20 +16,12 @@ class GenerationMetrics:
     """Metrics collected from a single generation run.
 
     Attributes:
-        ttft_ms: Time-to-first-token in milliseconds. Measures the latency
-            from submitting the prompt to producing the first output token.
-            In a real serving scenario, this is the user-perceived "thinking"
-            time. Dominated by the cost of the initial prefill pass.
-        tpot_ms: Time-per-output-token in milliseconds (average, excluding
-            first token). This determines the streaming speed — how fast
-            tokens appear to the user after the first one.
-        tokens_per_sec: Total output tokens / total wall time. The headline
-            throughput number.
-        total_tokens_generated: Number of tokens generated (excluding prompt).
-        total_time_ms: Total wall time for the full generation in milliseconds.
+        ttft_ms: Time-to-first-token in milliseconds.
+        tpot_ms: Time-per-output-token in milliseconds (average decode latency).
+        tokens_per_sec: Total output tokens / total wall time.
+        total_tokens_generated: Number of tokens generated.
+        total_time_ms: Total wall time in milliseconds.
         peak_vram_mb: Peak GPU VRAM allocated during generation, in MB.
-            Measured via torch.cuda.max_memory_allocated(), which tracks the
-            high-water mark of the PyTorch CUDA memory allocator.
     """
     ttft_ms: float = 0.0
     tpot_ms: float = 0.0
@@ -47,17 +35,12 @@ class GenerationMetrics:
 def cuda_timer():
     """Context manager that yields a callable returning elapsed time in ms.
 
-    Uses torch.cuda.synchronize() to ensure accurate GPU timing.
-
-    Usage:
-        with cuda_timer() as elapsed:
-            # ... GPU work ...
-        print(f"Took {elapsed()} ms")
+    Uses torch.cuda.synchronize() when CUDA is available to ensure genuine GPU execution timing.
     """
-    torch.cuda.synchronize()
+    if torch.cuda.is_available():
+        torch.cuda.synchronize()
     start = time.perf_counter()
 
-    # We store the result in a list so the inner function can mutate it
     result = [0.0]
 
     def get_elapsed() -> float:
@@ -65,43 +48,63 @@ def cuda_timer():
 
     yield get_elapsed
 
-    torch.cuda.synchronize()
+    if torch.cuda.is_available():
+        torch.cuda.synchronize()
     result[0] = (time.perf_counter() - start) * 1000.0  # Convert to ms
 
 
 def get_peak_vram_mb() -> float:
     """Return peak VRAM usage in MB since last reset."""
-    return torch.cuda.max_memory_allocated() / (1024 * 1024)
+    if torch.cuda.is_available():
+        return torch.cuda.max_memory_allocated() / (1024 * 1024)
+    return 0.0
 
 
 def reset_vram_stats():
     """Reset peak VRAM tracking. Call before each benchmark run."""
-    torch.cuda.reset_peak_memory_stats()
+    if torch.cuda.is_available():
+        torch.cuda.reset_peak_memory_stats()
 
 
 def get_eos_token_ids(tokenizer) -> set[int]:
-    """Extract all relevant EOS token IDs for generation termination.
+    """Extract all relevant EOS token IDs for generation termination across model families.
 
-    Includes standard tokenizer.eos_token_id and chat turn terminators (e.g. <|im_end|>).
+    Handles Qwen (<|im_end|>), Llama-3 (<|eot_id|>), Gemma (<end_of_turn>),
+    GPT-2/NeoX (<|endoftext|>), and standard tokenizer.eos_token_id.
     """
     eos_ids: set[int] = set()
+
     if tokenizer.eos_token_id is not None:
-        eos_ids.add(tokenizer.eos_token_id)
-    im_end_id = tokenizer.convert_tokens_to_ids("<|im_end|>")
-    if isinstance(im_end_id, int) and im_end_id != tokenizer.unk_token_id:
-        eos_ids.add(im_end_id)
+        if isinstance(tokenizer.eos_token_id, list):
+            eos_ids.update(tokenizer.eos_token_id)
+        else:
+            eos_ids.add(tokenizer.eos_token_id)
+
+    # Common chat stop tokens across popular models
+    common_stop_tokens = [
+        "<|im_end|>",
+        "<|eot_id|>",
+        "<end_of_turn>",
+        "</s>",
+        "<|endoftext|>",
+        "<|end|>",
+    ]
+
+    for stop_str in common_stop_tokens:
+        try:
+            token_id = tokenizer.convert_tokens_to_ids(stop_str)
+            if isinstance(token_id, int) and token_id != tokenizer.unk_token_id and token_id > 0:
+                eos_ids.add(token_id)
+        except Exception:
+            pass
+
     return eos_ids
 
 
 def compute_generation_metrics(
     token_times_ms: list[float], num_generated: int
 ) -> GenerationMetrics:
-    """Compute generation metrics from per-token timing data.
-
-    Args:
-        token_times_ms: List of durations (in ms) for each step (index 0 is prefill/TTFT).
-        num_generated: Total number of generated tokens.
-    """
+    """Compute generation metrics from per-token timing data."""
     if not token_times_ms:
         return GenerationMetrics()
 

@@ -9,15 +9,23 @@ import {
 import { BenchmarksView } from './BenchmarksView';
 import { ArchitectureView } from './ArchitectureView';
 import { HistoryView } from './HistoryView';
+import { HardwareProfileHUD } from './HardwareProfileHUD';
+import type { HardwareProfile, ModelArchitectureMetadata } from '../types';
 
 interface ModelAnalysisViewProps {
   serverOnline: boolean;
+  hardware: HardwareProfile | null;
+  modelMeta: ModelArchitectureMetadata | null;
   onBackToChat: () => void;
+  onOpenModelLoader: () => void;
 }
 
 export const ModelAnalysisView: React.FC<ModelAnalysisViewProps> = ({
   serverOnline,
+  hardware,
+  modelMeta,
   onBackToChat,
+  onOpenModelLoader,
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<'benchmarks' | 'architecture' | 'history'>('benchmarks');
 
@@ -39,10 +47,10 @@ export const ModelAnalysisView: React.FC<ModelAnalysisViewProps> = ({
           <div>
             <h2 className="text-base font-bold text-primary font-sans flex items-center gap-2">
               <BarChart2 className="w-4 h-4 text-primary" />
-              <span>Model Analysis & Performance Suite</span>
+              <span>Universal Computer Benchmarking Suite</span>
             </h2>
-            <p className="text-[11px] text-on-surface-variant font-mono">
-              Qwen2.5-0.5B-Instruct • Local PyTorch CUDA Engine Deep-Dive
+            <p className="text-[11px] text-on-surface-variant font-mono truncate max-w-[320px] sm:max-w-none">
+              {modelMeta?.model_name || 'Qwen2.5-0.5B-Instruct'} • {hardware?.cpu_model || 'Host Machine'}
             </p>
           </div>
         </div>
@@ -58,7 +66,7 @@ export const ModelAnalysisView: React.FC<ModelAnalysisViewProps> = ({
             }`}
           >
             <Zap className="w-3.5 h-3.5" />
-            <span>Benchmarks</span>
+            <span>Hardware Benchmarks</span>
           </button>
 
           <button
@@ -88,8 +96,20 @@ export const ModelAnalysisView: React.FC<ModelAnalysisViewProps> = ({
       </div>
 
       {/* Sub-View Content Viewport */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide">
-        {activeSubTab === 'benchmarks' && <BenchmarksView serverOnline={serverOnline} />}
+      <div className="flex-1 overflow-y-auto scrollbar-hide space-y-4 p-4 md:p-6">
+        {/* Persistent Hardware Profile HUD */}
+        <HardwareProfileHUD
+          hardware={hardware}
+          modelMeta={modelMeta}
+          onOpenModelLoader={onOpenModelLoader}
+        />
+
+        {activeSubTab === 'benchmarks' && (
+          <BenchmarksView
+            serverOnline={serverOnline}
+            onOpenModelLoader={onOpenModelLoader}
+          />
+        )}
         {activeSubTab === 'architecture' && <ArchitectureView />}
         {activeSubTab === 'history' && <HistoryView />}
       </div>

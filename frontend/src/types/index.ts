@@ -1,3 +1,59 @@
+export interface HardwareProfile {
+  os_name: string;
+  os_release: string;
+  architecture: string;
+  python_version: string;
+  pytorch_version: string;
+  cpu_model: string;
+  cpu_physical_cores: number;
+  cpu_logical_cores: number;
+  cpu_freq_mhz?: number | null;
+  ram_total_gb: number;
+  ram_available_gb: number;
+  ram_usage_percent: number;
+  cuda_available: boolean;
+  gpu_count: number;
+  gpu_name: string;
+  gpu_compute_capability?: string | null;
+  vram_total_mb: number;
+  vram_free_mb: number;
+  vram_allocated_mb: number;
+  vram_reserved_mb: number;
+  vram_usage_percent: number;
+  cuda_version?: string | null;
+}
+
+export interface ModelArchitectureMetadata {
+  model_name: string;
+  parameter_count: number;
+  parameter_count_m: number;
+  num_layers: number;
+  hidden_size: number;
+  num_attention_heads: number;
+  num_kv_heads: number;
+  head_dim: number;
+  vocab_size: number;
+  max_position_embeddings: number;
+  dtype_str: string;
+  device_str: string;
+  memory_footprint_mb: number;
+  fp16_vram_estimate_mb: number;
+  int8_vram_estimate_mb: number;
+  int4_vram_estimate_mb: number;
+  architectures: string[];
+}
+
+export interface ModelPreset {
+  id: string;
+  name: string;
+  family: string;
+  size_label: string;
+  params_m: number;
+  recommended_vram_mb: number;
+  description: string;
+  badge: string;
+}
+
 export interface SystemInfo {
   cuda_available: boolean;
   device_name: string;
@@ -62,10 +118,40 @@ export interface BenchmarkResult {
   peak_vram_mb: number;
   speedup?: number;
   speedup_vs_naive?: number;
+  memory_bandwidth_gbs?: number;
   memory_savings_percent?: number;
   sample_output?: string;
   prompt_tokens?: number;
   completion_tokens?: number;
+}
+
+export interface BatchScalePoint {
+  batch_size: number;
+  total_tokens: number;
+  wall_time_ms: number;
+  aggregate_throughput_tok_s: number;
+}
+
+export interface ComputerScoreBreakdown {
+  throughput_points: number;
+  bandwidth_points: number;
+  latency_points: number;
+}
+
+export interface ComputerScoreData {
+  score: number;
+  tier: string;
+  badge: string;
+  breakdown?: ComputerScoreBreakdown;
+}
+
+export interface ComputerBenchmarkResponse {
+  timestamp: number;
+  model: ModelArchitectureMetadata;
+  hardware: HardwareProfile;
+  score: ComputerScoreData;
+  results: BenchmarkResult[];
+  batch_scaling: BatchScalePoint[];
 }
 
 export interface PresetBenchmarkScale {
@@ -89,6 +175,16 @@ export interface SavedBenchmarkRun {
   model: string;
   device: string;
   results: BenchmarkResult[];
+  score?: ComputerScoreData;
+  hardware?: HardwareProfile;
+  user_id?: string;
+}
+
+export interface UserProfile {
+  id: string;
+  email?: string;
+  full_name?: string;
+  avatar_url?: string;
 }
 
 export interface ChatMessage {
@@ -107,4 +203,5 @@ export interface ChatSession {
   createdAt: number;
   messages: ChatMessage[];
   engine: string;
+  user_id?: string;
 }

@@ -7,16 +7,18 @@ import {
   Database,
 } from 'lucide-react';
 import { getBenchmarkHistory, clearLocalHistory } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 import type { SavedBenchmarkRun } from '../types';
 
 export const HistoryView: React.FC = () => {
+  const { user } = useAuth();
   const [history, setHistory] = useState<SavedBenchmarkRun[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   const loadHistory = async () => {
     setLoading(true);
     try {
-      const data = await getBenchmarkHistory();
+      const data = await getBenchmarkHistory(user?.id);
       setHistory(data);
     } catch (e) {
       console.warn('Failed to load history:', e);
@@ -27,7 +29,7 @@ export const HistoryView: React.FC = () => {
 
   useEffect(() => {
     loadHistory();
-  }, []);
+  }, [user?.id]);
 
   const handleExportJson = () => {
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(history, null, 2));

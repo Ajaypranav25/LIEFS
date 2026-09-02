@@ -31,9 +31,11 @@ class PagedEngine:
         self.block_size = block_size
 
         config = model.config
-        self.num_layers = config.num_hidden_layers
-        self.num_kv_heads = config.num_key_value_heads
-        self.head_dim = config.hidden_size // config.num_attention_heads
+        self.num_layers = getattr(config, 'num_hidden_layers', getattr(config, 'n_layer', 24))
+        num_attn_heads = getattr(config, 'num_attention_heads', getattr(config, 'n_head', 16))
+        self.num_kv_heads = getattr(config, 'num_key_value_heads', num_attn_heads)
+        hidden_size = getattr(config, 'hidden_size', getattr(config, 'n_embd', 1024))
+        self.head_dim = getattr(config, 'head_dim', hidden_size // num_attn_heads if num_attn_heads > 0 else 64)
 
         self.allocator = BlockAllocator(
             num_blocks=max_num_blocks,

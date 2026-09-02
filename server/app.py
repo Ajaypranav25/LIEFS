@@ -1,24 +1,25 @@
 """
-FastAPI Serving Layer for LIEFS (LLM Inference Engine From Scratch).
+FastAPI Serving Layer for LIEFS (Universal LLM & Computer Benchmarking Platform).
 
 Provides:
-- OpenAI-compatible /v1/completions with real-time SSE streaming (stream=True) & JSON (stream=False)
-- Multi-engine dispatch: KV-Cache (Stage 2), Naive Baseline (Stage 1), Paged Attention (Stage 4), Quantized INT8 (Stage 5), Continuous Batching (Stage 3)
-- System telemetry and GPU memory inspection (/v1/system)
-- Engine metadata and capabilities (/v1/engines)
-- Real-time and preset benchmark comparison endpoints (/v1/benchmarks/run, /v1/benchmarks/preset)
+- Dynamic Model Hub & Loader (/v1/models/load, /v1/models/current, /v1/models/presets)
+- Host Hardware Profiler (/v1/hardware, /v1/system)
+- Live Computer Benchmarking & Score Engine (/v1/benchmarks/computer, /v1/benchmarks/run)
+- Concurrency Batch Scaling (/v1/benchmarks/batch-scaling)
+- OpenAI-compatible /v1/completions with real-time SSE streaming & JSON
+- Multi-engine dispatch: KV-Cache (Stage 2), Naive Baseline (Stage 1), Paged Attention (Stage 4), Continuous Batching (Stage 3)
 """
 
 import asyncio
+import gc
 import json
 import time
 import uuid
-import gc
 import torch
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from contextlib import asynccontextmanager
 
 from server.schemas import (
     CompletionRequest,
@@ -27,57 +28,118 @@ from server.schemas import (
     CompletionUsage,
     BenchmarkRunRequest,
     BenchmarkEngineResult,
+    ModelLoadRequest,
+    ModelLoadResponse,
+    ComputerBenchmarkRequest,
+    ComputerBenchmarkResponse,
+    BatchScalePoint,
 )
-from liefs.model_loader import load_model_and_tokenizer, format_chat_prompt
+from liefs.model_loader import (
+    load_model_and_tokenizer,
+    get_model_metadata,
+    format_chat_prompt,
+    DEFAULT_MODEL_NAME,
+    POPULAR_MODEL_PRESETS,
+)
+from liefs.hardware_profiler import (
+    get_hardware_profile,
+    calculate_effective_memory_bandwidth,
+    calculate_computer_score,
+)
 from liefs.kv_cache_engine import KVCacheEngine
 from liefs.naive_engine import NaiveEngine
 from liefs.paged_engine import PagedEngine
-from liefs.quantized_engine import create_quantized_engine
 from liefs.scheduler import ContinuousBatchScheduler
 from liefs.utils import (
     get_peak_vram_mb,
     reset_vram_stats,
 )
-from benchmarks.prompts import BENCHMARK_PROMPTS
 
-# Global state
-MODEL_PATH = "Qwen/Qwen2.5-0.5B-Instruct"
-app_state = {}
+# Global runtime state
+app_state = {
+    "model_name": DEFAULT_MODEL_NAME,
+    "model": None,
+    "tokenizer": None,
+    "meta": None,
+    "kv_engine": None,
+    "naive_engine": None,
+    "paged_engine": None,
+    "recent_metrics": [],
+}
+
+
+def instantiate_engines(model_name: str, precision: str = "float16", device: str = "auto", hf_token: str | None = None):
+    """Cleanly unload prior model tensors, load new model, and initialize engines."""
+    # Clean up old references
+    if app_state.get("model") is not None:
+        del app_state["model"]
+        app_state["model"] = None
+    if app_state.get("tokenizer") is not None:
+        del app_state["tokenizer"]
+        app_state["tokenizer"] = None
+    if app_state.get("kv_engine") is not None:
+        del app_state["kv_engine"]
+        app_state["kv_engine"] = None
+    if app_state.get("naive_engine") is not None:
+        del app_state["naive_engine"]
+        app_state["naive_engine"] = None
+    if app_state.get("paged_engine") is not None:
+        del app_state["paged_engine"]
+        app_state["paged_engine"] = None
+
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+    print(f"Loading model: {model_name} on {device} ({precision})...")
+    model, tokenizer = load_model_and_tokenizer(
+        model_name=model_name,
+        dtype=precision,
+        device=device,
+        hf_token=hf_token,
+    )
+    meta = get_model_metadata(model, tokenizer, model_name)
+
+    kv_engine = KVCacheEngine(model, tokenizer)
+    naive_engine = NaiveEngine(model, tokenizer)
+    try:
+        paged_engine = PagedEngine(model, tokenizer, block_size=16, max_num_blocks=256)
+    except Exception as e:
+        print(f"Paged engine notice: {e}")
+        paged_engine = None
+
+    app_state["model_name"] = model_name
+    app_state["model"] = model
+    app_state["tokenizer"] = tokenizer
+    app_state["meta"] = meta
+    app_state["kv_engine"] = kv_engine
+    app_state["naive_engine"] = naive_engine
+    app_state["paged_engine"] = paged_engine
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Startup event: Load model, tokenizer, and initialize inference engines.
-    """
-    print(f"Loading model from {MODEL_PATH}...")
-    model, tokenizer = load_model_and_tokenizer(MODEL_PATH)
+    """Startup event: Profile hardware and load initial default model."""
+    print("LIEFS Server initializing...")
+    hw = get_hardware_profile()
+    print(f"Host Hardware detected: {hw.cpu_model} | GPU: {hw.gpu_name} ({hw.vram_total_mb:.1f} MB VRAM)")
     
-    # Pre-instantiate primary engines
-    kv_engine = KVCacheEngine(model, tokenizer)
-    naive_engine = NaiveEngine(model, tokenizer)
-    paged_engine = PagedEngine(model, tokenizer, block_size=16, max_num_blocks=256)
-    
-    app_state["model"] = model
-    app_state["tokenizer"] = tokenizer
-    app_state["kv_engine"] = kv_engine
-    app_state["naive_engine"] = naive_engine
-    app_state["paged_engine"] = paged_engine
-    app_state["recent_metrics"] = []
-    
-    # Store device info
-    device_name = torch.cuda.get_device_name(0) if torch.cuda.is_available() else "CPU"
-    app_state["device_name"] = device_name
-    print(f"LIEFS Server ready on device: {device_name}")
-    
+    try:
+        instantiate_engines(DEFAULT_MODEL_NAME)
+    except Exception as e:
+        print(f"Warning on startup model load: {e}")
+        
     yield
     app_state.clear()
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
 
 
 app = FastAPI(
-    title="LIEFS Inference Engine Server",
-    description="High-performance custom LLM inference engine with KV-caching, continuous batching, and quantization.",
-    version="1.0.0",
+    title="LIEFS Universal LLM & Computer Benchmarking Platform",
+    description="Custom inference engine and hardware benchmark suite for any Hugging Face model and computer.",
+    version="2.0.0",
     lifespan=lifespan
 )
 
@@ -92,55 +154,101 @@ app.add_middleware(
 
 @app.get("/health")
 async def health_check():
-    """Simple health check endpoint."""
+    """Health check endpoint."""
     return {
         "status": "ok",
-        "service": "LIEFS Inference Engine",
-        "model": MODEL_PATH,
-        "device": app_state.get("device_name", "CPU"),
+        "service": "LIEFS Universal Benchmarking Engine",
+        "model": app_state.get("model_name", DEFAULT_MODEL_NAME),
+        "device": "CUDA" if torch.cuda.is_available() else "CPU",
         "timestamp": int(time.time()),
     }
 
 
 @app.get("/v1/system")
-async def get_system_info():
-    """Returns GPU and engine memory stats."""
-    cuda_avail = torch.cuda.is_available()
-    vram_allocated = 0.0
-    vram_reserved = 0.0
-    vram_total = 0.0
-    
-    if cuda_avail:
-        vram_allocated = torch.cuda.memory_allocated() / (1024 * 1024)
-        vram_reserved = torch.cuda.memory_reserved() / (1024 * 1024)
-        vram_total = torch.cuda.get_device_properties(0).total_memory / (1024 * 1024)
-        
+@app.get("/v1/hardware")
+async def get_hardware_info():
+    """Returns complete computer hardware specifications."""
+    hw = get_hardware_profile()
+    return hw.to_dict()
+
+
+@app.get("/v1/models/presets")
+async def get_model_presets():
+    """Returns curated list of benchmark-ready models."""
     return {
-        "cuda_available": cuda_avail,
-        "device_name": app_state.get("device_name", "CPU"),
-        "pytorch_version": torch.__version__,
-        "model_name": MODEL_PATH,
-        "vram_allocated_mb": round(vram_allocated, 2),
-        "vram_reserved_mb": round(vram_reserved, 2),
-        "vram_total_mb": round(vram_total, 2),
-        "vram_usage_percent": round((vram_allocated / vram_total * 100) if vram_total > 0 else 0, 1),
+        "presets": POPULAR_MODEL_PRESETS,
+        "current_model": app_state.get("model_name", DEFAULT_MODEL_NAME),
     }
+
+
+@app.get("/v1/models/current")
+async def get_current_model_info():
+    """Returns architecture specs of the currently loaded model."""
+    meta = app_state.get("meta")
+    if meta:
+        return meta.to_dict()
+    return {
+        "model_name": app_state.get("model_name", DEFAULT_MODEL_NAME),
+        "parameter_count_m": 0,
+        "device_str": "unknown",
+    }
+
+
+@app.post("/v1/models/load", response_model=ModelLoadResponse)
+async def load_custom_model(request: ModelLoadRequest):
+    """
+    Dynamically loads any Hugging Face model or local checkpoint path into memory.
+    """
+    t0 = time.perf_counter()
+    try:
+        instantiate_engines(
+            model_name=request.model_name,
+            precision=request.precision,
+            device=request.device,
+            hf_token=request.hf_token,
+        )
+        elapsed = round(time.perf_counter() - t0, 2)
+        meta = app_state["meta"]
+        return ModelLoadResponse(
+            status="ok",
+            message=f"Successfully loaded {request.model_name} in {elapsed}s",
+            load_time_sec=elapsed,
+            model_name=request.model_name,
+            metadata=meta.to_dict(),
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to load model {request.model_name}: {str(e)}")
+
+
+@app.post("/v1/models/unload")
+async def unload_model():
+    """Frees loaded model and purges GPU VRAM."""
+    if app_state.get("model") is not None:
+        del app_state["model"]
+        app_state["model"] = None
+    if app_state.get("tokenizer") is not None:
+        del app_state["tokenizer"]
+        app_state["tokenizer"] = None
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    return {"status": "ok", "message": "Model unloaded and VRAM cleared"}
 
 
 @app.get("/v1/models")
 async def list_models():
     """OpenAI-compatible models list endpoint."""
+    current_name = app_state.get("model_name", DEFAULT_MODEL_NAME)
     return {
         "object": "list",
         "data": [
             {
-                "id": "Qwen2.5-0.5B-Instruct",
+                "id": current_name.split("/")[-1],
                 "object": "model",
                 "created": int(time.time()),
                 "owned_by": "liefs",
-                "permission": [],
-                "root": "Qwen/Qwen2.5-0.5B-Instruct",
-                "engines": ["kv_cache", "naive", "paged", "quantized", "continuous_batching"]
+                "root": current_name,
+                "engines": ["kv_cache", "naive", "paged", "continuous_batching"]
             }
         ]
     }
@@ -148,13 +256,13 @@ async def list_models():
 
 @app.get("/v1/engines")
 async def list_engines():
-    """Metadata describing the 5 engine architectural stages."""
+    """Metadata describing the engine architectural stages."""
     return {
         "engines": [
             {
                 "id": "kv_cache",
                 "name": "KV-Cache Engine (Stage 2)",
-                "description": "Prefill + Decode separation with key/value tensor caching. Eliminates redundant quadratic recomputation.",
+                "description": "Prefill + Decode separation with key/value tensor caching. Eliminates quadratic recomputation.",
                 "complexity": "O(N) per step attention",
                 "recommended": True,
                 "badge": "Default / Optimized"
@@ -162,7 +270,7 @@ async def list_engines():
             {
                 "id": "naive",
                 "name": "Naive Baseline (Stage 1)",
-                "description": "Full sequence recomputation at every token step. Intentionally baseline implementation.",
+                "description": "Full sequence recomputation at every token step. Baseline implementation.",
                 "complexity": "O(N²) quadratic compute",
                 "recommended": False,
                 "badge": "Baseline"
@@ -170,23 +278,15 @@ async def list_engines():
             {
                 "id": "paged",
                 "name": "Paged Attention (Stage 4)",
-                "description": "Dynamic BlockAllocator pool (16 tokens/block). Eliminates external memory fragmentation and pre-allocation waste.",
-                "complexity": "Zero-fragmentation VRAM Pool",
+                "description": "Dynamic BlockAllocator pool (16 tokens/block). Eliminates external memory fragmentation.",
+                "complexity": "Zero-fragmentation Pool",
                 "recommended": True,
                 "badge": "Zero Waste"
             },
             {
-                "id": "quantized",
-                "name": "INT8 Quantized Engine (Stage 5)",
-                "description": "Per-channel symmetric weight quantization with on-the-fly dequantization. Reduces weight memory by ~50%.",
-                "complexity": "INT8 Weights / FP16 Compute",
-                "recommended": True,
-                "badge": "50% VRAM Cut"
-            },
-            {
                 "id": "continuous_batching",
                 "name": "Continuous Batching (Stage 3)",
-                "description": "Iteration-level request scheduling. Dynamically injects new prompts without waiting for active generations to finish.",
+                "description": "Iteration-level request scheduling for high-throughput multi-request concurrency.",
                 "complexity": "High Throughput Concurrency",
                 "recommended": True,
                 "badge": "Multi-Tenant"
@@ -204,30 +304,31 @@ async def get_metrics():
 @app.post("/v1/completions")
 async def create_completion(request: CompletionRequest):
     """
-    Handles completion requests with support for both JSON and real-time SSE streaming.
-    Supports engine selection (kv_cache, naive, paged).
+    Handles completion requests with real-time SSE streaming or JSON.
     """
-    tokenizer = app_state["tokenizer"]
-    model = app_state["model"]
-    
-    # Engine routing
+    tokenizer = app_state.get("tokenizer")
+    model = app_state.get("model")
+    if model is None or tokenizer is None:
+        raise HTTPException(status_code=503, detail="No model loaded. Call /v1/models/load first.")
+
     engine_type = (request.engine or "kv_cache").lower()
     if engine_type == "naive":
         engine = app_state.get("naive_engine") or NaiveEngine(model, tokenizer)
-    elif engine_type == "paged":
-        engine = app_state.get("paged_engine") or PagedEngine(model, tokenizer)
+    elif engine_type == "paged" and app_state.get("paged_engine"):
+        engine = app_state.get("paged_engine")
     else:
         engine = app_state.get("kv_engine") or KVCacheEngine(model, tokenizer)
-        
-    prompt_tensor = format_chat_prompt(tokenizer, request.prompt)
+
+    device_str = "cuda" if next(model.parameters()).is_cuda else "cpu"
+    prompt_tensor = format_chat_prompt(tokenizer, request.prompt, device=device_str)
     prompt_len = prompt_tensor.shape[1]
     response_id = f"cmpl-{uuid.uuid4().hex}"
-    
+    current_model_name = app_state.get("model_name", DEFAULT_MODEL_NAME)
+
     # ── SSE Streaming Mode ─────────────────────────────────────────────
     if request.stream:
         async def stream_generator():
             try:
-                # Use generate_stream method
                 for token_id, token_text, metrics_dict, is_done in engine.generate_stream(
                     prompt_tensor, max_new_tokens=request.max_tokens
                 ):
@@ -236,7 +337,7 @@ async def create_completion(request: CompletionRequest):
                             "id": response_id,
                             "object": "text_completion",
                             "created": int(time.time()),
-                            "model": "Qwen2.5-0.5B-Instruct",
+                            "model": current_model_name,
                             "engine": engine_type,
                             "choices": [
                                 {
@@ -254,8 +355,6 @@ async def create_completion(request: CompletionRequest):
                         }
                         yield f"data: {json.dumps(chunk)}\n\n"
                         yield "data: [DONE]\n\n"
-                        
-                        # Store in history
                         app_state["recent_metrics"].append(metrics_dict)
                         break
                     else:
@@ -263,7 +362,7 @@ async def create_completion(request: CompletionRequest):
                             "id": response_id,
                             "object": "text_completion",
                             "created": int(time.time()),
-                            "model": "Qwen2.5-0.5B-Instruct",
+                            "model": current_model_name,
                             "engine": engine_type,
                             "choices": [
                                 {
@@ -275,7 +374,6 @@ async def create_completion(request: CompletionRequest):
                             "metrics": metrics_dict
                         }
                         yield f"data: {json.dumps(chunk)}\n\n"
-                        # Yield control slightly to ensure smooth network streaming flush
                         await asyncio.sleep(0.001)
             except Exception as e:
                 err_chunk = {"error": str(e)}
@@ -292,24 +390,24 @@ async def create_completion(request: CompletionRequest):
             }
         )
 
-    # ── Synchronous Non-Streaming Mode ──────────────────────────────────
+    # ── Non-Streaming Mode ──────────────────────────────────────────────
     try:
         generated_ids, metrics = engine.generate(
-            prompt_tensor, 
+            prompt_tensor,
             max_new_tokens=request.max_tokens
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-        
+
     generated_text = tokenizer.decode(generated_ids, skip_special_tokens=True)
     finish_reason = "length" if len(generated_ids) >= request.max_tokens else "stop"
-    
+
     usage = CompletionUsage(
         prompt_tokens=prompt_len,
         completion_tokens=len(generated_ids),
         total_tokens=prompt_len + len(generated_ids)
     )
-    
+
     metrics_dict = {
         "ttft_ms": metrics.ttft_ms if metrics else 0.0,
         "tpot_ms": metrics.tpot_ms if metrics else 0.0,
@@ -321,11 +419,11 @@ async def create_completion(request: CompletionRequest):
         "engine": engine_type
     }
     app_state["recent_metrics"].append(metrics_dict)
-    
+
     return CompletionResponse(
         id=response_id,
         created=int(time.time()),
-        model="Qwen2.5-0.5B-Instruct",
+        model=current_model_name,
         choices=[
             CompletionChoice(
                 text=generated_text,
@@ -341,12 +439,15 @@ async def create_completion(request: CompletionRequest):
 @app.get("/v1/benchmarks/preset")
 async def get_preset_benchmarks():
     """
-    Returns reference benchmark profiles comparing all engine variants
-    across Short (32 tokens), Medium (128 tokens), and Long (256 tokens) regimes.
+    Returns reference benchmarks for comparison across scales.
     """
+    meta = app_state.get("meta")
+    model_name = app_state.get("model_name", DEFAULT_MODEL_NAME)
+    hw = get_hardware_profile()
+
     return {
-        "model": "Qwen2.5-0.5B-Instruct",
-        "device": app_state.get("device_name", "NVIDIA RTX / CUDA GPU"),
+        "model": model_name,
+        "device": hw.gpu_name if hw.cuda_available else hw.cpu_model,
         "benchmarks": [
             {
                 "scale": "Short (32 tokens)",
@@ -387,19 +488,8 @@ async def get_preset_benchmarks():
                         "memory_savings_percent": 0.0
                     },
                     {
-                        "engine": "quantized",
-                        "engine_name": "Stage 5: INT8 Quantized",
-                        "throughput_tok_s": 88.2,
-                        "ttft_ms": 16.2,
-                        "tpot_ms": 11.3,
-                        "total_time_ms": 362.8,
-                        "peak_vram_mb": 648.5,
-                        "speedup": 3.55,
-                        "memory_savings_percent": 45.2
-                    },
-                    {
                         "engine": "continuous_batching",
-                        "engine_name": "Stage 3: Continuous Batching (Batch=4)",
+                        "engine_name": "Stage 3: Continuous Batching (B=4)",
                         "throughput_tok_s": 284.6,
                         "ttft_ms": 18.4,
                         "tpot_ms": 3.51,
@@ -449,19 +539,8 @@ async def get_preset_benchmarks():
                         "memory_savings_percent": -1.5
                     },
                     {
-                        "engine": "quantized",
-                        "engine_name": "Stage 5: INT8 Quantized",
-                        "throughput_tok_s": 89.5,
-                        "ttft_ms": 20.4,
-                        "tpot_ms": 11.1,
-                        "total_time_ms": 1430.2,
-                        "peak_vram_mb": 672.0,
-                        "speedup": 6.13,
-                        "memory_savings_percent": 44.5
-                    },
-                    {
                         "engine": "continuous_batching",
-                        "engine_name": "Stage 3: Continuous Batching (Batch=4)",
+                        "engine_name": "Stage 3: Continuous Batching (B=4)",
                         "throughput_tok_s": 342.1,
                         "ttft_ms": 22.8,
                         "tpot_ms": 2.92,
@@ -471,93 +550,43 @@ async def get_preset_benchmarks():
                         "memory_savings_percent": -9.0
                     }
                 ]
-            },
-            {
-                "scale": "Long (256 tokens)",
-                "prompt": "Write a Python function to implement merge sort with detailed comments.",
-                "max_tokens": 256,
-                "results": [
-                    {
-                        "engine": "naive",
-                        "engine_name": "Stage 1: Naive Baseline",
-                        "throughput_tok_s": 9.2,
-                        "ttft_ms": 21.0,
-                        "tpot_ms": 108.7,
-                        "total_time_ms": 27827.2,
-                        "peak_vram_mb": 1248.0,
-                        "speedup": 1.0,
-                        "memory_savings_percent": 0.0
-                    },
-                    {
-                        "engine": "kv_cache",
-                        "engine_name": "Stage 2: KV-Cache Engine",
-                        "throughput_tok_s": 99.1,
-                        "ttft_ms": 21.4,
-                        "tpot_ms": 10.0,
-                        "total_time_ms": 2583.4,
-                        "peak_vram_mb": 1264.0,
-                        "speedup": 10.77,
-                        "memory_savings_percent": -1.3
-                    },
-                    {
-                        "engine": "paged",
-                        "engine_name": "Stage 4: Paged Attention",
-                        "throughput_tok_s": 98.4,
-                        "ttft_ms": 21.9,
-                        "tpot_ms": 10.1,
-                        "total_time_ms": 2601.8,
-                        "peak_vram_mb": 1268.0,
-                        "speedup": 10.70,
-                        "memory_savings_percent": -1.6
-                    },
-                    {
-                        "engine": "quantized",
-                        "engine_name": "Stage 5: INT8 Quantized",
-                        "throughput_tok_s": 90.1,
-                        "ttft_ms": 23.1,
-                        "tpot_ms": 11.0,
-                        "total_time_ms": 2841.2,
-                        "peak_vram_mb": 704.0,
-                        "speedup": 9.79,
-                        "memory_savings_percent": 43.6
-                    },
-                    {
-                        "engine": "continuous_batching",
-                        "engine_name": "Stage 3: Continuous Batching (Batch=4)",
-                        "throughput_tok_s": 365.8,
-                        "ttft_ms": 25.2,
-                        "tpot_ms": 2.73,
-                        "total_time_ms": 2798.0,
-                        "peak_vram_mb": 1410.0,
-                        "speedup": 39.76,
-                        "memory_savings_percent": -13.0
-                    }
-                ]
             }
         ]
     }
 
 
 @app.post("/v1/benchmarks/run")
-async def run_benchmark_comparison(request: BenchmarkRunRequest):
+@app.post("/v1/benchmarks/computer", response_model=ComputerBenchmarkResponse)
+async def run_computer_benchmark(request: ComputerBenchmarkRequest):
     """
-    Runs a live side-by-side benchmark across selected engines.
+    Runs a live benchmark across selected engines for the loaded model on the host computer.
+    Calculates achieved memory bandwidth (GB/s) and the Computer Performance Index Score.
     """
-    tokenizer = app_state["tokenizer"]
-    model = app_state["model"]
-    input_ids = format_chat_prompt(tokenizer, request.prompt)
+    tokenizer = app_state.get("tokenizer")
+    model = app_state.get("model")
+    if model is None or tokenizer is None:
+        raise HTTPException(status_code=503, detail="No model loaded.")
+
+    meta = app_state.get("meta") or get_model_metadata(model, tokenizer, app_state.get("model_name", DEFAULT_MODEL_NAME))
+    hw = get_hardware_profile()
+
+    device_str = "cuda" if next(model.parameters()).is_cuda else "cpu"
+    input_ids = format_chat_prompt(tokenizer, request.prompt, device=device_str)
     prompt_len = input_ids.shape[1]
-    
+
     results: list[BenchmarkEngineResult] = []
     naive_time = None
-    
-    # Run Naive first if requested to establish baseline
+
+    # 1. Naive Baseline (Stage 1)
     if "naive" in request.engines:
         naive_eng = app_state.get("naive_engine") or NaiveEngine(model, tokenizer)
-        torch.cuda.empty_cache()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        reset_vram_stats()
         gen_ids, m = naive_eng.generate(input_ids, max_new_tokens=request.max_tokens)
         text = tokenizer.decode(gen_ids, skip_special_tokens=True)
         naive_time = m.total_time_ms
+        bw = calculate_effective_memory_bandwidth(meta.memory_footprint_mb, m.tokens_per_sec)
         results.append(
             BenchmarkEngineResult(
                 engine="naive",
@@ -570,16 +599,23 @@ async def run_benchmark_comparison(request: BenchmarkRunRequest):
                 prompt_tokens=prompt_len,
                 completion_tokens=len(gen_ids),
                 speedup_vs_naive=1.0,
+                memory_bandwidth_gbs=bw,
                 sample_output=text[:160]
             )
         )
-        
+
+    # 2. KV-Cache Engine (Stage 2)
+    kv_metrics = None
     if "kv_cache" in request.engines:
         kv_eng = app_state.get("kv_engine") or KVCacheEngine(model, tokenizer)
-        torch.cuda.empty_cache()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        reset_vram_stats()
         gen_ids, m = kv_eng.generate(input_ids, max_new_tokens=request.max_tokens)
         text = tokenizer.decode(gen_ids, skip_special_tokens=True)
+        kv_metrics = m
         speedup = round((naive_time / m.total_time_ms), 2) if naive_time and m.total_time_ms > 0 else 1.0
+        bw = calculate_effective_memory_bandwidth(meta.memory_footprint_mb, m.tokens_per_sec)
         results.append(
             BenchmarkEngineResult(
                 engine="kv_cache",
@@ -592,16 +628,21 @@ async def run_benchmark_comparison(request: BenchmarkRunRequest):
                 prompt_tokens=prompt_len,
                 completion_tokens=len(gen_ids),
                 speedup_vs_naive=speedup,
+                memory_bandwidth_gbs=bw,
                 sample_output=text[:160]
             )
         )
-        
-    if "paged" in request.engines:
-        paged_eng = app_state.get("paged_engine") or PagedEngine(model, tokenizer)
-        torch.cuda.empty_cache()
+
+    # 3. Paged Attention (Stage 4)
+    if "paged" in request.engines and app_state.get("paged_engine"):
+        paged_eng = app_state["paged_engine"]
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        reset_vram_stats()
         gen_ids, m = paged_eng.generate(input_ids, max_new_tokens=request.max_tokens)
         text = tokenizer.decode(gen_ids, skip_special_tokens=True)
         speedup = round((naive_time / m.total_time_ms), 2) if naive_time and m.total_time_ms > 0 else 1.0
+        bw = calculate_effective_memory_bandwidth(meta.memory_footprint_mb, m.tokens_per_sec)
         results.append(
             BenchmarkEngineResult(
                 engine="paged",
@@ -614,16 +655,53 @@ async def run_benchmark_comparison(request: BenchmarkRunRequest):
                 prompt_tokens=prompt_len,
                 completion_tokens=len(gen_ids),
                 speedup_vs_naive=speedup,
+                memory_bandwidth_gbs=bw,
                 sample_output=text[:160]
             )
         )
 
-    return {
-        "timestamp": int(time.time()),
-        "prompt": request.prompt,
-        "max_tokens": request.max_tokens,
-        "results": results
-    }
+    # 4. Concurrency Batch Scaling (Stage 3)
+    batch_scaling: list[BatchScalePoint] = []
+    if request.include_batch_scaling:
+        for b_size in [1, 2, 4, 8]:
+            scheduler = ContinuousBatchScheduler(model, tokenizer, max_batch_size=b_size)
+            for req_i in range(b_size):
+                scheduler.add_request(f"Compute step {req_i}", max_new_tokens=min(32, request.max_tokens))
+            t_start = time.perf_counter()
+            req_metrics = scheduler.run_until_complete()
+            t_batch_elapsed = (time.perf_counter() - t_start) * 1000.0
+            total_toks = sum(m.total_tokens_generated for m in req_metrics)
+            agg_throughput = round((total_toks / t_batch_elapsed * 1000.0), 2) if t_batch_elapsed > 0 else 0.0
+            batch_scaling.append(
+                BatchScalePoint(
+                    batch_size=b_size,
+                    total_tokens=total_toks,
+                    wall_time_ms=round(t_batch_elapsed, 1),
+                    aggregate_throughput_tok_s=agg_throughput,
+                )
+            )
+
+    # 5. Computer Score
+    benchmark_tok_s = kv_metrics.tokens_per_sec if kv_metrics else (results[0].tokens_per_sec if results else 0.0)
+    benchmark_ttft = kv_metrics.ttft_ms if kv_metrics else (results[0].ttft_ms if results else 0.0)
+    bw_primary = calculate_effective_memory_bandwidth(meta.memory_footprint_mb, benchmark_tok_s)
+
+    score_data = calculate_computer_score(
+        tokens_per_sec=benchmark_tok_s,
+        ttft_ms=benchmark_ttft,
+        model_param_count_m=meta.parameter_count_m,
+        memory_bandwidth_gbs=bw_primary,
+        is_gpu=hw.cuda_available,
+    )
+
+    return ComputerBenchmarkResponse(
+        timestamp=int(time.time()),
+        model=meta.to_dict(),
+        hardware=hw.to_dict(),
+        score=score_data,
+        results=results,
+        batch_scaling=batch_scaling,
+    )
 
 
 if __name__ == "__main__":

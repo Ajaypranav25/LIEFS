@@ -5,6 +5,7 @@ import {
   Cpu,
   Trash2,
 } from 'lucide-react';
+import { UserAuth } from './UserAuth';
 import type { SystemInfo, ChatSession } from '../types';
 
 interface SidebarProps {
@@ -158,6 +159,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           </div>
         )}
+
+        {/* User Profile / Auth Status */}
+        <div className="pt-1">
+          <UserAuth />
+        </div>
       </div>
     </aside>
   );
