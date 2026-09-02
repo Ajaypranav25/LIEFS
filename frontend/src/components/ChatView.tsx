@@ -47,11 +47,11 @@ const SUGGESTIONS = [
 ];
 
 const ENGINES = [
-  { id: 'kv_cache', name: 'KV-Cache (Stage 2)', badge: 'O(N) Fast' },
-  { id: 'naive', name: 'Naive (Stage 1)', badge: 'O(N²) Base' },
-  { id: 'continuous_batching', name: 'Continuous Batching', badge: 'Stage 3' },
-  { id: 'paged', name: 'Paged Attention', badge: 'Stage 4' },
-  { id: 'quantized', name: 'INT8 Quantized', badge: 'Stage 5' },
+  { id: 'kv_cache', name: 'KV-Cache (Stage 2)', badge: 'O(N) Fast', desc: 'Saves past KV tokens in GPU VRAM' },
+  { id: 'naive', name: 'Naive (Stage 1)', badge: 'O(N²) Base', desc: 'Recomputes entire sequence each step' },
+  { id: 'continuous_batching', name: 'Continuous Batching', badge: 'Stage 3', desc: 'Iteration-level concurrent scheduling' },
+  { id: 'paged', name: 'Paged Attention', badge: 'Stage 4', desc: 'Virtual block table allocation' },
+  { id: 'quantized', name: 'INT8 Quantized', badge: 'Stage 5', desc: 'Per-channel 8-bit weight compression' },
 ];
 
 export const ChatView: React.FC<ChatViewProps> = ({
@@ -69,6 +69,23 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [engineDropdownOpen, setEngineDropdownOpen] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setEngineDropdownOpen(false);
+      }
+    };
+
+    if (engineDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [engineDropdownOpen]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -274,12 +291,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
             {/* Bottom Input Controls Ribbon */}
             <div className="flex items-center justify-between pt-2 px-2 border-t border-surface-container/60">
               {/* Engine Selector Dropdown Pill */}
-              <div className="relative">
+              <div className="relative" ref={dropdownRef}>
                 <button
                   type="button"
                   onClick={() => setEngineDropdownOpen(!engineDropdownOpen)}
                   disabled={isGenerating}
-                  className="px-2.5 py-1 rounded-lg bg-surface-lowest border border-outline-variant/40 hover:border-primary/50 text-xs font-mono text-on-surface-variant hover:text-primary flex items-center gap-1.5 transition-all cursor-pointer"
+                  className="px-2.5 py-1.5 rounded-lg bg-surface-lowest border border-outline-variant/50 hover:border-primary text-xs font-mono text-on-surface-variant hover:text-primary flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
                 >
                   <Cpu className="w-3.5 h-3.5 text-primary" />
                   <span className="font-semibold text-primary">{activeEngineObj.name}</span>
@@ -287,8 +304,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 </button>
 
                 {engineDropdownOpen && (
-                  <div className="absolute bottom-full mb-2 left-0 w-64 bg-surface-high border border-outline-variant/60 rounded-xl shadow-2xl p-1 z-50 font-mono text-xs space-y-1">
-                    <div className="px-2 py-1 text-[10px] text-outline uppercase font-semibold">
+                  <div className="absolute bottom-full mb-2 left-0 w-72 bg-[#081326]/95 backdrop-blur-3xl border border-primary/50 rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.9)] p-2 z-50 font-mono text-xs space-y-1">
+                    <div className="px-2 py-1 text-[10px] text-primary uppercase font-bold tracking-wider border-b border-surface-container/80 pb-1 mb-1">
                       Select Inference Strategy
                     </div>
                     {ENGINES.map((eng) => (
@@ -299,14 +316,17 @@ export const ChatView: React.FC<ChatViewProps> = ({
                           setSelectedEngine(eng.id);
                           setEngineDropdownOpen(false);
                         }}
-                        className={`w-full px-2.5 py-1.5 rounded-lg flex items-center justify-between text-left transition-colors cursor-pointer ${
+                        className={`w-full px-2.5 py-2 rounded-lg flex items-center justify-between text-left transition-all cursor-pointer ${
                           selectedEngine === eng.id
-                            ? 'bg-primary-container text-on-primary-container font-bold'
-                            : 'text-on-surface-variant hover:bg-surface-bright hover:text-on-background'
+                            ? 'bg-primary-container text-on-primary-container font-bold shadow-glow-cyan'
+                            : 'text-on-surface-variant hover:bg-surface-high hover:text-on-background'
                         }`}
                       >
-                        <span>{eng.name}</span>
-                        <span className="text-[9px] px-1 py-0.5 rounded bg-surface-dim opacity-80">
+                        <div className="flex flex-col">
+                          <span className="text-xs font-semibold">{eng.name}</span>
+                          <span className="text-[10px] text-slate-400 font-sans">{eng.desc}</span>
+                        </div>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-surface-dim border border-outline-variant/40 text-primary shrink-0 ml-2">
                           {eng.badge}
                         </span>
                       </button>

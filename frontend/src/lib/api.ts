@@ -145,12 +145,16 @@ export async function streamCompletion(
     };
 
     read().catch((err) => {
-      if (err.name !== 'AbortError') {
+      if (err.name === 'AbortError') {
+        callbacks.onDone(accumulatedText, lastMetrics);
+      } else {
         callbacks.onError(err);
       }
     });
   } catch (err: any) {
-    if (err.name !== 'AbortError') {
+    if (err.name === 'AbortError') {
+      callbacks.onDone(accumulatedText, lastMetrics);
+    } else {
       callbacks.onError(err);
     }
   }
