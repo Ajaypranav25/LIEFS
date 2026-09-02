@@ -126,9 +126,40 @@ LIEFS/
 │   ├── test_kv_cache.py
 │   ├── test_continuous.py
 │   ├── test_paged.py
-│   └── test_quantized.py
+├── frontend/                   # Frontend Dashboard (React + Vite + TypeScript + Tailwind)
+│   ├── src/
+│   │   ├── components/         # PlaygroundView, BenchmarksView, ArchitectureView, HistoryView, Header
+│   │   ├── lib/                # API client (SSE parser), Supabase persistence
+│   │   ├── types/              # TypeScript schemas
+│   │   └── __tests__/          # Vitest component & API test suites
+│   ├── package.json
+│   └── vite.config.ts
 ├── requirements.txt
 └── README.md
+```
+
+---
+
+## 🖥️ Frontend Dashboard & Demo UI
+
+A modern cyber-minimalist dashboard built for system demos and technical interviews.
+
+### Key Capabilities:
+1. **Live Token Streaming Playground:** Real-time token streaming with instant per-token telemetry HUD (Time-to-First-Token, Time-per-Output-Token, Tokens/sec, Peak VRAM) and engine selector (KV-Cache, Naive, Paged Attention, INT8 Quantized).
+2. **Benchmark Comparison Suite:** Side-by-side interactive Recharts comparing Throughput, TTFT/TPOT latency breakdowns, VRAM footprint, and sequence length scaling curves.
+3. **Architecture & KV Memory Sizing Calculator:** Educational deep-dive explaining the 5 optimization stages alongside an interactive memory demand calculator.
+4. **Supabase Persistence:** Stores and tracks historical benchmark runs in Supabase Postgres with instant local fallback.
+
+### Running the Dashboard Locally:
+```bash
+# 1. Start the FastAPI backend server (Terminal 1)
+python -m uvicorn server.app:app --host 127.0.0.1 --port 8000
+
+# 2. Start the Frontend Vite dev server (Terminal 2)
+cd frontend
+npm install
+npm run dev
+# Open http://localhost:5173
 ```
 
 ---
@@ -136,24 +167,22 @@ LIEFS/
 ## 🧪 Running Tests & Benchmarks
 
 ```bash
-# 1. Install dependencies
+# 1. Install Python backend dependencies
 pip install -r requirements.txt
 
-# 2. Run the full unit test suite (34 tests)
+# 2. Run Python engine unit test suite (34 tests)
 python -m pytest tests/ -v
 
-# 3. Run individual stage benchmarks
+# 3. Run Frontend unit test suite (Vitest)
+cd frontend
+npm test
+
+# 4. Run individual stage benchmarks
 python -m benchmarks.bench_naive
 python -m benchmarks.bench_kv_cache
 python -m benchmarks.bench_continuous
 python -m benchmarks.bench_paged
 python -m benchmarks.bench_quantized
-
-# 4. Run serving layer
-# Terminal 1:
-python -m uvicorn server.app:app --host 127.0.0.1 --port 8000
-# Terminal 2:
-python -m benchmarks.bench_server
 ```
 
 ---
@@ -176,3 +205,4 @@ Contiguous allocation requires pre-allocating contiguous VRAM for maximum sequen
 * **Per-channel:** Neural network weights have vastly different dynamic ranges across channels (outliers). Computing scale $s_c = \frac{\max(|W_c|)}{127}$ per output channel preserves dynamic range and minimizes quantization error.
 * **Symmetric:** Maps zero to zero ($z=0$), eliminating zero-point subtraction overhead during dequantization.
 * **Skipping `lm_head`:** The language model head projects hidden states to the 151,936 vocabulary dimension. Quantization error at this final layer directly distorts logit calibration and token rankings.
+

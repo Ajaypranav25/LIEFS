@@ -1,0 +1,482 @@
+[
+  {
+    "id": "TC001",
+    "title": "Stream generated text with a selected prompt and stage",
+    "description": "Verifies that a user can choose a prompt, select an inference stage, start live generation, and see streamed output with telemetry updates.",
+    "category": "Live Token Streaming Playground",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Select a prompt preset"
+      },
+      {
+        "type": "action",
+        "description": "Choose the KV-Cache inference stage"
+      },
+      {
+        "type": "action",
+        "description": "Adjust the maximum new tokens setting"
+      },
+      {
+        "type": "action",
+        "description": "Adjust the temperature setting"
+      },
+      {
+        "type": "action",
+        "description": "Start generation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify generated text is streaming and telemetry values are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "Generate output from a custom prompt",
+    "description": "Verifies that a user can enter their own prompt, run generation, and see output appear for the custom input.",
+    "category": "Live Token Streaming Playground",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Enter a custom prompt"
+      },
+      {
+        "type": "action",
+        "description": "Choose the Naive inference stage"
+      },
+      {
+        "type": "action",
+        "description": "Start generation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify generated output is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Abort an in-progress generation",
+    "description": "Verifies that a user can stop a running generation and the streaming output stops updating.",
+    "category": "Live Token Streaming Playground",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Select a prompt preset"
+      },
+      {
+        "type": "action",
+        "description": "Choose the Paged inference stage"
+      },
+      {
+        "type": "action",
+        "description": "Start generation"
+      },
+      {
+        "type": "action",
+        "description": "Abort generation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify generation is stopped and an abort state is shown"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Run a live benchmark comparison",
+    "description": "Verifies that a user can start a live benchmark run and see newly generated comparison results appear.",
+    "category": "Architectural Benchmark Comparison",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Switch to a benchmark sequence scale"
+      },
+      {
+        "type": "action",
+        "description": "Start a live benchmark run"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify benchmark results are displayed after the run"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Compare benchmark results at different sequence scales",
+    "description": "Verifies that a user can switch sequence length scales and see the benchmark comparison views update accordingly.",
+    "category": "Architectural Benchmark Comparison",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Switch to the short sequence scale"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify benchmark comparison data is displayed for the selected scale"
+      },
+      {
+        "type": "action",
+        "description": "Switch to the medium sequence scale"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify benchmark comparison data is updated for the selected scale"
+      },
+      {
+        "type": "action",
+        "description": "Switch to the long sequence scale"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify benchmark comparison data is updated for the selected scale"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Load preset benchmark data",
+    "description": "Verifies that preset benchmark results can be loaded and shown in the comparison charts.",
+    "category": "Architectural Benchmark Comparison",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Load preset benchmark data"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify preset benchmark comparison charts are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "Copy the generated output",
+    "description": "Verifies that a user can copy completed generation output for later use.",
+    "category": "Live Token Streaming Playground",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Select a prompt preset"
+      },
+      {
+        "type": "action",
+        "description": "Choose the Quantized inference stage"
+      },
+      {
+        "type": "action",
+        "description": "Start generation"
+      },
+      {
+        "type": "action",
+        "description": "Copy the generated output"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a copy confirmation is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Save a benchmark run to history",
+    "description": "Verifies that a completed benchmark run can be persisted and later appears in saved history.",
+    "category": "Architectural Benchmark Comparison",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Run a live benchmark comparison"
+      },
+      {
+        "type": "action",
+        "description": "Save the benchmark run to history"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the saved benchmark run appears in history"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "Estimate memory demand from KV calculator inputs",
+    "description": "Verifies that adjusting calculator inputs updates VRAM demand and maximum concurrent stream estimates.",
+    "category": "Architecture & KV Memory Sizing Calculator",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Adjust the context length"
+      },
+      {
+        "type": "action",
+        "description": "Adjust the batch size"
+      },
+      {
+        "type": "action",
+        "description": "Adjust the layer count"
+      },
+      {
+        "type": "action",
+        "description": "Adjust the KV head count"
+      },
+      {
+        "type": "action",
+        "description": "Adjust the quantization precision"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify VRAM demand and maximum concurrent stream estimates are updated"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC010",
+    "title": "Browse saved benchmark runs",
+    "description": "Verifies that a learner can open the history view and inspect previously saved benchmark runs with their device metadata and speedup information.",
+    "category": "Historical Benchmark Runs",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the benchmark history view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify prior benchmark runs are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify device metadata and speedup details are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC011",
+    "title": "Use memory estimates to choose an inference stage",
+    "description": "Verifies that the calculator can guide a user toward a more efficient inference stage by comparing memory implications.",
+    "category": "Architecture & KV Memory Sizing Calculator",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Adjust the calculator inputs to a high-memory scenario"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the memory estimate reflects a higher VRAM demand"
+      },
+      {
+        "type": "action",
+        "description": "Choose a more efficient inference stage"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected stage is reflected in the playground or architecture view"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC012",
+    "title": "View benchmark history details after a refresh",
+    "description": "Verifies that a user can refresh stored history and then inspect run details without leaving the history view.",
+    "category": "Historical Benchmark Runs",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the benchmark history view"
+      },
+      {
+        "type": "action",
+        "description": "Refresh the stored history"
+      },
+      {
+        "type": "action",
+        "description": "Open a benchmark run for details"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected run details are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify device metadata and speedup information are visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC013",
+    "title": "Refresh stored benchmark history",
+    "description": "Verifies that refreshing the stored history updates the visible benchmark list from persistent storage.",
+    "category": "Historical Benchmark Runs",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the benchmark history view"
+      },
+      {
+        "type": "action",
+        "description": "Refresh the stored history"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the benchmark list is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the history reflects the refreshed stored results"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC014",
+    "title": "Clear local benchmark cache and recover history",
+    "description": "Verifies that clearing the local cache removes locally stored history and that the benchmark history can still be reviewed from persistent storage afterward.",
+    "category": "Historical Benchmark Runs",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the benchmark history view"
+      },
+      {
+        "type": "action",
+        "description": "Clear the local cache"
+      },
+      {
+        "type": "action",
+        "description": "Refresh the stored history"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify benchmark history is displayed again"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify previously saved runs are available from persistent storage"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC015",
+    "title": "Export benchmark history as JSON",
+    "description": "Verifies that a user can export the benchmark history and receive a JSON representation of the saved runs.",
+    "category": "Historical Benchmark Runs",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the benchmark history view"
+      },
+      {
+        "type": "action",
+        "description": "Export the benchmark history"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an export confirmation is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the exported history data is available as JSON"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC016",
+    "title": "Handle an empty benchmark history",
+    "description": "Verifies that the history view shows an empty state when no benchmark runs are available to review.",
+    "category": "Historical Benchmark Runs",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the benchmark history view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an empty state message is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify no benchmark runs are displayed"
+      }
+    ],
+    "priority": "Low"
+  }
+]

@@ -106,6 +106,70 @@ class KVCacheEngine:
         metrics = self._compute_metrics(token_times_ms, len(generated_ids))
         return generated_ids, metrics
 
+    @torch.no_grad()
+    def generate_stream(
+        self,
+        input_ids: torch.Tensor,
+        max_new_tokens: int = 128,
+    ):
+        """Yields (token_id, token_text, metrics_dict, is_done) for SSE streaming."""
+        reset_vram_stats()
+        generated_ids: list[int] = []
+        token_times_ms: list[float] = []
+
+        # ── Phase 1: Prefill ──────────────────────────────────────────────
+        with cuda_timer() as prefill_elapsed:
+            logits, kv_cache = self.prefill(input_ids)
+
+        token_times_ms.append(prefill_elapsed())
+
+        # ── Phase 2: Decode ───────────────────────────────────────────────
+        for step in range(max_new_tokens):
+            next_token_id = logits.argmax(dim=-1).item()
+
+            if next_token_id in self.eos_token_ids:
+                break
+
+            generated_ids.append(next_token_id)
+            token_text = self.tokenizer.decode([next_token_id], skip_special_tokens=False)
+
+            running_metrics = self._compute_metrics(token_times_ms, len(generated_ids))
+            metrics_dict = {
+                "ttft_ms": round(running_metrics.ttft_ms, 2),
+                "tpot_ms": round(running_metrics.tpot_ms, 2),
+                "total_time_ms": round(running_metrics.total_time_ms, 2),
+                "tokens_per_sec": round(running_metrics.tokens_per_sec, 2),
+                "peak_vram_mb": round(running_metrics.peak_vram_mb, 2),
+                "generated_tokens": len(generated_ids),
+                "prompt_tokens": input_ids.shape[1],
+            }
+
+            yield next_token_id, token_text, metrics_dict, False
+
+            if len(generated_ids) >= max_new_tokens:
+                break
+
+            next_token_tensor = torch.tensor(
+                [[next_token_id]], device=input_ids.device, dtype=input_ids.dtype
+            )
+
+            with cuda_timer() as decode_elapsed:
+                logits, kv_cache = self.decode_step(next_token_tensor, kv_cache)
+
+            token_times_ms.append(decode_elapsed())
+
+        final_metrics = self._compute_metrics(token_times_ms, len(generated_ids))
+        final_metrics_dict = {
+            "ttft_ms": round(final_metrics.ttft_ms, 2),
+            "tpot_ms": round(final_metrics.tpot_ms, 2),
+            "total_time_ms": round(final_metrics.total_time_ms, 2),
+            "tokens_per_sec": round(final_metrics.tokens_per_sec, 2),
+            "peak_vram_mb": round(final_metrics.peak_vram_mb, 2),
+            "generated_tokens": len(generated_ids),
+            "prompt_tokens": input_ids.shape[1],
+        }
+        yield None, "", final_metrics_dict, True
+
     def _compute_metrics(
         self, token_times_ms: list[float], num_generated: int
     ) -> GenerationMetrics:
