@@ -203,10 +203,12 @@ export const BenchmarksView: React.FC<BenchmarksViewProps> = ({ serverOnline }) 
       {/* Live Benchmark Runner */}
       <div className="cyber-card p-4 rounded-lg flex flex-col md:flex-row items-center gap-3">
         <div className="flex-1 w-full flex items-center gap-2 font-mono">
-          <span className="text-xs text-primary font-semibold shrink-0">
+          <label htmlFor="custom-benchmark-prompt" className="text-xs text-primary font-semibold shrink-0">
             Live Benchmark:
-          </span>
+          </label>
           <input
+            id="custom-benchmark-prompt"
+            name="customBenchmarkPrompt"
             type="text"
             value={customPrompt}
             onChange={(e) => setCustomPrompt(e.target.value)}
@@ -216,8 +218,10 @@ export const BenchmarksView: React.FC<BenchmarksViewProps> = ({ serverOnline }) 
           />
         </div>
         <div className="flex items-center gap-2 shrink-0 font-mono">
-          <span className="text-xs text-on-surface-variant">Tokens:</span>
+          <label htmlFor="custom-benchmark-tokens" className="text-xs text-on-surface-variant">Tokens:</label>
           <input
+            id="custom-benchmark-tokens"
+            name="customBenchmarkTokens"
             type="number"
             min="16"
             max="256"

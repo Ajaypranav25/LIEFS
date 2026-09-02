@@ -223,10 +223,12 @@ export const ArchitectureView: React.FC = () => {
             {/* Context Length */}
             <div className="space-y-1">
               <div className="flex justify-between text-xs">
-                <span className="text-on-surface-variant">Context Length (Tokens)</span>
+                <label htmlFor="calc-context-length" className="text-on-surface-variant">Context Length (Tokens)</label>
                 <span className="text-primary font-semibold">{contextLength.toLocaleString()}</span>
               </div>
               <input
+                id="calc-context-length"
+                name="contextLength"
                 type="range"
                 min="512"
                 max="32768"
@@ -240,10 +242,12 @@ export const ArchitectureView: React.FC = () => {
             {/* Batch Size */}
             <div className="space-y-1">
               <div className="flex justify-between text-xs">
-                <span className="text-on-surface-variant">Batch Size (Concurrent Streams)</span>
+                <label htmlFor="calc-batch-size" className="text-on-surface-variant">Batch Size (Concurrent Streams)</label>
                 <span className="text-secondary font-semibold">{batchSize}</span>
               </div>
               <input
+                id="calc-batch-size"
+                name="batchSize"
                 type="range"
                 min="1"
                 max="64"
@@ -257,10 +261,12 @@ export const ArchitectureView: React.FC = () => {
             {/* Layers */}
             <div className="space-y-1">
               <div className="flex justify-between text-xs">
-                <span className="text-on-surface-variant">Transformer Layers</span>
+                <label htmlFor="calc-num-layers" className="text-on-surface-variant">Transformer Layers</label>
                 <span className="text-on-surface font-semibold">{numLayers}</span>
               </div>
               <input
+                id="calc-num-layers"
+                name="numLayers"
                 type="range"
                 min="12"
                 max="80"
@@ -274,10 +280,12 @@ export const ArchitectureView: React.FC = () => {
             {/* KV Heads (GQA) */}
             <div className="space-y-1">
               <div className="flex justify-between text-xs">
-                <span className="text-on-surface-variant">KV Attention Heads (GQA)</span>
+                <label htmlFor="calc-kv-heads" className="text-on-surface-variant">KV Attention Heads (GQA)</label>
                 <span className="text-on-surface font-semibold">{numKVHeads}</span>
               </div>
               <input
+                id="calc-kv-heads"
+                name="numKVHeads"
                 type="range"
                 min="1"
                 max="32"

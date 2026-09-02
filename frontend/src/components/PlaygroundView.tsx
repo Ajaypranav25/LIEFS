@@ -208,8 +208,10 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ serverOnline }) 
 
           {/* System Prompt */}
           <div className="flex flex-col gap-1">
-            <label className="text-[11px] text-secondary font-medium">System Instructions</label>
+            <label htmlFor="system-prompt-input" className="text-[11px] text-secondary font-medium">System Instructions</label>
             <textarea
+              id="system-prompt-input"
+              name="systemPrompt"
               value={systemPrompt}
               onChange={(e) => setSystemPrompt(e.target.value)}
               disabled={generating}
@@ -222,10 +224,12 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ serverOnline }) 
           {/* User Prompt */}
           <div className="flex flex-col gap-1">
             <div className="flex justify-between items-baseline">
-              <label className="text-[11px] text-secondary font-medium">User Prompt</label>
+              <label htmlFor="user-prompt-input" className="text-[11px] text-secondary font-medium">User Prompt</label>
               <span className="text-[10px] text-slate-500">~{Math.ceil(prompt.length / 4)} tokens</span>
             </div>
             <textarea
+              id="user-prompt-input"
+              name="userPrompt"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               disabled={generating}
@@ -250,6 +254,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ serverOnline }) 
               ].map((strategy) => (
                 <label
                   key={strategy.id}
+                  htmlFor={`strategy-${strategy.id}`}
                   onClick={() => setSelectedEngine(strategy.id)}
                   className={`flex items-center justify-between px-2.5 py-1.5 rounded border cursor-pointer transition-all ${
                     selectedEngine === strategy.id
@@ -259,8 +264,10 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ serverOnline }) 
                 >
                   <div className="flex items-center gap-2">
                     <input
+                      id={`strategy-${strategy.id}`}
                       type="radio"
                       name="strategy"
+                      value={strategy.id}
                       checked={selectedEngine === strategy.id}
                       onChange={() => setSelectedEngine(strategy.id)}
                       className="text-primary accent-primary"
@@ -279,10 +286,12 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ serverOnline }) 
           <div className="flex flex-col gap-3 pt-2 border-t border-slate-800/80">
             <div>
               <div className="flex justify-between text-[11px] mb-1">
-                <span className="text-on-surface">Max Tokens</span>
+                <label htmlFor="max-tokens-slider" className="text-on-surface">Max Tokens</label>
                 <span className="text-secondary font-semibold">{maxTokens}</span>
               </div>
               <input
+                id="max-tokens-slider"
+                name="maxTokens"
                 type="range"
                 min="16"
                 max="512"
@@ -296,10 +305,12 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ serverOnline }) 
 
             <div>
               <div className="flex justify-between text-[11px] mb-1">
-                <span className="text-on-surface">Temperature</span>
+                <label htmlFor="temperature-slider" className="text-on-surface">Temperature</label>
                 <span className="text-secondary font-semibold">{temperature.toFixed(1)}</span>
               </div>
               <input
+                id="temperature-slider"
+                name="temperature"
                 type="range"
                 min="0.0"
                 max="1.0"
@@ -313,10 +324,12 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ serverOnline }) 
 
             <div>
               <div className="flex justify-between text-[11px] mb-1">
-                <span className="text-on-surface">Top-P</span>
+                <label htmlFor="topp-slider" className="text-on-surface">Top-P</label>
                 <span className="text-secondary font-semibold">{topP.toFixed(2)}</span>
               </div>
               <input
+                id="topp-slider"
+                name="topP"
                 type="range"
                 min="0.5"
                 max="1.0"
