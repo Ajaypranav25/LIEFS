@@ -24,16 +24,24 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #070d1f;
+  background: #020617;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 3px;
+  background: #2e3447;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #4edea3;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* Monospace font styling */
@@ -57,7 +65,7 @@ body {
   50% { opacity: 0; }
 }
 
-/* Glassmorphic border glow */
+/* Glassmorphic border glow & cyber cards */
 .glass-panel {
   background: rgba(15, 23, 42, 0.75);
   backdrop-filter: blur(12px);
@@ -69,7 +77,28 @@ body {
   background: rgba(15, 23, 42, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  box-shadow: 0 0 20px -5px rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(78, 222, 163, 0.25);
+  box-shadow: 0 0 20px -5px rgba(78, 222, 163, 0.15);
 }
 
+.cyber-card {
+  background-color: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glow-hover:hover {
+  box-shadow: 0 0 12px rgba(78, 222, 163, 0.25);
+}
+
+.glow-active {
+  box-shadow: 0 0 12px rgba(78, 222, 163, 0.25);
+}
+
+.status-led {
+  box-shadow: 0 0 6px #4edea3;
+}
+
+.syntax-keyword { color: #ff7b72; }
+.syntax-string { color: #a5d6ff; }
+.syntax-comment { color: #8b949e; }
+.syntax-function { color: #d2a8ff; }

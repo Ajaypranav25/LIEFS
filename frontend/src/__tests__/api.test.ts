@@ -14,7 +14,7 @@ describe('API Client Suite', () => {
       device: 'NVIDIA GeForce RTX 4060 Laptop GPU',
     };
 
-    global.fetch = vi.fn().mockResolvedValue({
+    globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => mockHealth,
     } as Response);
@@ -22,7 +22,7 @@ describe('API Client Suite', () => {
     const result = await fetchHealth();
     expect(result.status).toBe('ok');
     expect(result.service).toBe('LIEFS Inference Engine');
-    expect(global.fetch).toHaveBeenCalledWith('http://127.0.0.1:8000/health');
+    expect(globalThis.fetch).toHaveBeenCalledWith('http://127.0.0.1:8000/health');
   });
 
   it('fetchSystemInfo returns GPU and memory stats', async () => {
@@ -37,7 +37,7 @@ describe('API Client Suite', () => {
       vram_usage_percent: 12.2,
     };
 
-    global.fetch = vi.fn().mockResolvedValue({
+    globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => mockSys,
     } as Response);
@@ -55,7 +55,7 @@ describe('API Client Suite', () => {
       ],
     };
 
-    global.fetch = vi.fn().mockResolvedValue({
+    globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => mockEngines,
     } as Response);
@@ -82,7 +82,7 @@ describe('API Client Suite', () => {
       ],
     };
 
-    global.fetch = vi.fn().mockResolvedValue({
+    globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => mockPresets,
     } as Response);
