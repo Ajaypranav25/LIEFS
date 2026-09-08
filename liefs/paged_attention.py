@@ -40,7 +40,7 @@ class BlockAllocator:
         num_layers: int,
         num_kv_heads: int,
         head_dim: int,
-        device: str = "cuda",
+        device: str = "cuda" if torch.cuda.is_available() else "cpu",
         dtype: torch.dtype = torch.float16,
     ):
         self.num_blocks = num_blocks

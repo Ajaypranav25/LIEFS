@@ -279,6 +279,7 @@ def format_chat_prompt(
             tokenize=True,
             add_generation_prompt=True,
             return_tensors="pt",
+            return_dict=False,
         )
     except Exception:
         # Fallback for tokenizers without chat templates or with syntax incompatibilities

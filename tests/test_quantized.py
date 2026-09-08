@@ -14,12 +14,20 @@ from liefs.kv_cache_engine import KVCacheEngine
 def loaded_components():
     """Load model, record original VRAM, quantize, and return engine + stats."""
     model, tokenizer = load_model_and_tokenizer()
-    torch.cuda.synchronize()
-    vram_before = torch.cuda.memory_allocated() / (1024 * 1024)
+
+    if torch.cuda.is_available():
+        torch.cuda.synchronize()
+        vram_before = torch.cuda.memory_allocated() / (1024 * 1024)
+    else:
+        vram_before = 0.0
 
     quantize_model(model)
-    torch.cuda.synchronize()
-    vram_after = torch.cuda.memory_allocated() / (1024 * 1024)
+
+    if torch.cuda.is_available():
+        torch.cuda.synchronize()
+        vram_after = torch.cuda.memory_allocated() / (1024 * 1024)
+    else:
+        vram_after = 0.0
 
     engine = KVCacheEngine(model, tokenizer)
     return {
@@ -34,6 +42,9 @@ def loaded_components():
 class TestQuantization:
     def test_quantization_reduces_memory(self, loaded_components):
         """VRAM usage should decrease after INT8 weight quantization."""
+        if not torch.cuda.is_available():
+            pytest.skip("Test requires CUDA VRAM profiling")
+
         vram_before = loaded_components["vram_before"]
         vram_after = loaded_components["vram_after"]
         assert vram_after < vram_before, (
