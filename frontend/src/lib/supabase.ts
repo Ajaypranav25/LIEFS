@@ -8,8 +8,11 @@ import type {
   HardwareProfile,
 } from '../types';
 
-const SUPABASE_URL = 'https://agcbxmiijjbvxfoosvwz.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnY2J4bWlpampidnhmb29zdnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1NjQ2MjcsImV4cCI6MjA4MjE0MDYyN30.fniKk7olCaPs_oTtwK81VdqPLcAqNsYk6Sjyyn7Dmw0';
+const SUPABASE_URL =
+  import.meta.env?.VITE_SUPABASE_URL || 'https://agcbxmiijjbvxfoosvwz.supabase.co';
+const SUPABASE_ANON_KEY =
+  import.meta.env?.VITE_SUPABASE_ANON_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnY2J4bWlpampidnhmb29zdnd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1NjQ2MjcsImV4cCI6MjA4MjE0MDYyN30.fniKk7olCaPs_oTtwK81VdqPLcAqNsYk6Sjyyn7Dmw0';
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 

@@ -34,71 +34,68 @@ export const Header: React.FC<HeaderProps> = ({
   const modelShortName = modelMeta?.model_name.split('/').pop() || systemInfo?.model_name.split('/').pop() || 'Qwen2.5-0.5B';
 
   return (
-    <header className="h-14 bg-surface-dim border-b border-surface-container flex items-center justify-between px-4 md:px-6 shrink-0 z-30 font-mono text-xs">
+    <header className="h-13 bg-surface-dim border-b border-outline-variant flex items-center justify-between px-4 md:px-6 shrink-0 z-30 font-sans text-xs">
       {/* Left Section: Mobile Menu + View Navigation Switcher */}
       <div className="flex items-center gap-3">
         <button
           onClick={onToggleSidebar}
-          className="md:hidden p-1.5 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-high transition-colors"
+          className="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-surface-high transition-colors"
           title="Toggle Navigation"
         >
-          <Menu className="w-5 h-5" />
+          <Menu className="w-4 h-4" />
         </button>
 
-        {/* View Mode Switcher Pills */}
-        <div className="flex bg-surface-lowest p-1 rounded-xl border border-outline-variant/30">
+        {/* View Mode Switcher: Apple/Linear-style Segmented Control */}
+        <div className="flex bg-surface-lowest p-0.5 rounded-lg border border-outline-variant shadow-subtle">
           <button
             onClick={() => setActiveView('chat')}
-            className={`px-3 py-1 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
+            className={`px-3 py-1 rounded-md flex items-center gap-1.5 transition-all text-xs cursor-pointer ${
               activeView === 'chat'
-                ? 'bg-primary-container text-on-primary-container font-bold shadow-glow-cyan'
-                : 'text-on-surface-variant hover:text-on-background'
+                ? 'bg-surface-container text-slate-100 font-medium shadow-subtle border border-outline-variant'
+                : 'text-slate-400 hover:text-slate-200 border border-transparent'
             }`}
           >
-            <MessageSquare className="w-3.5 h-3.5" />
-            <span>AI Chat</span>
+            <MessageSquare className="w-3.5 h-3.5 text-primary" />
+            <span>Chat</span>
           </button>
 
           <button
             onClick={() => setActiveView('analysis')}
-            className={`px-3 py-1 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
+            className={`px-3 py-1 rounded-md flex items-center gap-1.5 transition-all text-xs cursor-pointer ${
               activeView === 'analysis'
-                ? 'bg-primary-container text-on-primary-container font-bold shadow-glow-cyan'
-                : 'text-on-surface-variant hover:text-on-background'
+                ? 'bg-surface-container text-slate-100 font-medium shadow-subtle border border-outline-variant'
+                : 'text-slate-400 hover:text-slate-200 border border-transparent'
             }`}
           >
-            <BarChart2 className="w-3.5 h-3.5" />
-            <span>Computer Benchmarks</span>
-            <span className="text-[9px] px-1 py-0.2 rounded bg-primary/20 text-primary font-bold">
-              PRO
-            </span>
+            <BarChart2 className="w-3.5 h-3.5 text-primary" />
+            <span>Benchmarks</span>
           </button>
         </div>
       </div>
 
       {/* Right Section: Active Model Pill, Hardware Status & VRAM */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5">
         {/* Active Model Selector Pill */}
         <button
           onClick={onOpenModelLoader}
-          className="flex items-center gap-2 px-3 py-1 rounded-lg bg-surface-lowest border border-primary/40 hover:border-primary text-on-surface hover:text-primary transition-all cursor-pointer group shadow-glow-cyan/50"
+          className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-surface-lowest hover:bg-surface-container border border-outline-variant hover:border-white/[0.16] text-slate-300 hover:text-slate-100 transition-all cursor-pointer shadow-subtle group"
           title="Click to load or switch models"
         >
           <Layers className="w-3.5 h-3.5 text-primary" />
-          <span className="text-[11px] font-bold truncate max-w-[130px] sm:max-w-[180px]">
+          <span className="text-[11px] font-mono font-medium truncate max-w-[130px] sm:max-w-[180px]">
             {modelShortName}
           </span>
-          <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary/20 text-primary uppercase font-bold group-hover:bg-primary group-hover:text-on-primary transition-colors hidden sm:inline">
+          <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/[0.06] text-slate-400 font-mono group-hover:text-slate-200 transition-colors hidden sm:inline">
             Switch
           </span>
         </button>
 
         {/* Host Computer Hardware Pill */}
         {hardware && (
-          <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-lg bg-surface-lowest border border-outline-variant/40">
+          <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-surface-lowest border border-outline-variant">
             <Cpu className="w-3.5 h-3.5 text-secondary" />
-            <span className="text-[11px] text-on-surface-variant">Host:</span>
-            <span className="text-[11px] font-bold text-on-surface truncate max-w-[120px]" title={hardware.gpu_name !== 'None (CPU Only)' ? hardware.gpu_name : hardware.cpu_model}>
+            <span className="text-[11px] text-slate-400">Host:</span>
+            <span className="text-[11px] font-medium text-slate-200 truncate max-w-[120px]" title={hardware.gpu_name !== 'None (CPU Only)' ? hardware.gpu_name : hardware.cpu_model}>
               {hardware.cuda_available ? hardware.gpu_name.replace('NVIDIA GeForce ', '') : 'CPU'}
             </span>
           </div>
@@ -106,24 +103,24 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* GPU VRAM Monitor */}
         {systemInfo && systemInfo.cuda_available && (
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-lg bg-surface-lowest border border-outline-variant/40">
+          <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-surface-lowest border border-outline-variant">
             <HardDrive className="w-3.5 h-3.5 text-secondary" />
-            <span className="text-[11px] text-on-surface-variant">VRAM:</span>
-            <span className="text-[11px] font-bold text-secondary">
+            <span className="text-[11px] text-slate-400">VRAM:</span>
+            <span className="text-[11px] font-mono font-medium text-slate-200 tabular-nums">
               {(systemInfo.vram_allocated_mb / 1024).toFixed(1)}GB
             </span>
           </div>
         )}
 
-        {/* Server Online Status LED */}
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-lowest border border-outline-variant/40">
+        {/* Server Online Status Indicator */}
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-lowest border border-outline-variant">
           <span
             className={`w-2 h-2 rounded-full ${
-              serverOnline ? 'bg-primary status-led animate-pulse' : 'bg-rose-500'
+              serverOnline ? 'bg-emerald-400 ring-2 ring-emerald-400/20' : 'bg-rose-500 ring-2 ring-rose-500/20'
             }`}
           />
-          <span className={`text-[11px] font-semibold hidden md:inline ${serverOnline ? 'text-primary' : 'text-rose-400'}`}>
-            {serverOnline ? 'ONLINE' : 'OFFLINE'}
+          <span className={`text-[11px] font-medium hidden md:inline ${serverOnline ? 'text-slate-300' : 'text-rose-400'}`}>
+            {serverOnline ? 'Online' : 'Offline'}
           </span>
         </div>
 

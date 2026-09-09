@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 
 class CompletionRequest(BaseModel):
-    prompt: str
+    prompt: str = Field(..., max_length=100000, description="Input prompt text (max 100k chars)")
     max_tokens: int = Field(default=128, ge=1, le=2048)
     temperature: float = Field(default=0.0, ge=0.0, le=2.0)  # 0.0 = greedy
     stream: bool = False
@@ -37,10 +37,10 @@ class CompletionResponse(BaseModel):
 
 
 class ModelLoadRequest(BaseModel):
-    model_name: str = "Qwen/Qwen2.5-0.5B-Instruct"
-    precision: str = "float16"
-    device: str = "auto"
-    hf_token: Optional[str] = None
+    model_name: str = Field(default="Qwen/Qwen2.5-0.5B-Instruct", max_length=256)
+    precision: str = Field(default="float16", max_length=32)
+    device: str = Field(default="auto", max_length=32)
+    hf_token: Optional[str] = Field(default=None, max_length=256)
 
 
 class ModelLoadResponse(BaseModel):
@@ -52,8 +52,8 @@ class ModelLoadResponse(BaseModel):
 
 
 class BenchmarkRunRequest(BaseModel):
-    prompt: str = "Explain how a transformer model works step by step."
-    max_tokens: int = 128
+    prompt: str = Field(default="Explain how a transformer model works step by step.", max_length=50000)
+    max_tokens: int = Field(default=128, ge=1, le=2048)
     engines: list[str] = ["naive", "kv_cache", "paged"]
 
 
@@ -73,8 +73,8 @@ class BenchmarkEngineResult(BaseModel):
 
 
 class ComputerBenchmarkRequest(BaseModel):
-    prompt: str = "Explain how transformer self-attention works step by step in plain terms."
-    max_tokens: int = 128
+    prompt: str = Field(default="Explain how transformer self-attention works step by step in plain terms.", max_length=50000)
+    max_tokens: int = Field(default=128, ge=1, le=2048)
     engines: list[str] = ["naive", "kv_cache", "paged"]
     include_batch_scaling: bool = True
 

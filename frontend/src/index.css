@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -11,30 +11,32 @@
 body {
   margin: 0;
   padding: 0;
-  background-color: #081326;
-  color: #d8e2fd;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #0b0c10;
+  color: #e2e8f0;
+  font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
   height: 100vh;
 }
 
 /* Custom scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #081326;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #202a3e;
-  border-radius: 4px;
+  background: #242936;
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #7dd3fc;
+  background: #38bdf8;
 }
 
 .scrollbar-hide::-webkit-scrollbar {
@@ -45,20 +47,26 @@ body {
   scrollbar-width: none;
 }
 
-/* Monospace font styling */
+/* Monospace font styling with tabular numbers */
 .font-mono {
   font-family: 'JetBrains Mono', monospace;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
-/* Terminal streaming glow and cursor */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Terminal streaming cursor */
 .terminal-cursor {
   display: inline-block;
-  width: 8px;
-  height: 16px;
-  background-color: #7dd3fc;
-  margin-left: 2px;
+  width: 7px;
+  height: 14px;
+  background-color: #38bdf8;
+  margin-left: 3px;
   vertical-align: middle;
-  animation: blink 0.8s infinite;
+  animation: blink 0.9s infinite;
+  border-radius: 1px;
 }
 
 @keyframes blink {
@@ -66,37 +74,52 @@ body {
   50% { opacity: 0; }
 }
 
-/* Glass cards and vibrant cyber styling */
-.glass-card {
-  background: linear-gradient(145deg, rgba(32, 42, 62, 0.75) 0%, rgba(17, 27, 47, 0.9) 100%);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(137, 146, 152, 0.15);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
+/* Clean, human-crafted surface cards replacing gaudy neon glows */
+.glass-card, .surface-card {
+  background: #14171f;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.35);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .glass-panel {
-  background: rgba(17, 27, 47, 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0f1116;
+  border: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .cyber-card {
-  background-color: #111b2f;
-  border: 1px solid rgba(137, 146, 152, 0.18);
+  background-color: #14171f;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.glow-text {
-  text-shadow: 0 0 12px rgba(125, 211, 252, 0.6);
+.hairline-border {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Authentic hardware-style status pip */
+.status-pip {
+  position: relative;
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background-color: #10b981;
+}
+
+.status-pip::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  border: 1px solid rgba(16, 185, 129, 0.35);
 }
 
 .status-led {
-  box-shadow: 0 0 6px #7dd3fc;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
 }
 
 /* Syntax highlighting in chat bubbles */
-.syntax-keyword { color: #ff7b72; font-weight: 600; }
-.syntax-string { color: #a5d6ff; }
-.syntax-comment { color: #8b949e; font-style: italic; }
-.syntax-function { color: #d2a8ff; font-weight: 600; }
+.syntax-keyword { color: #f472b6; font-weight: 600; }
+.syntax-string { color: #38bdf8; }
+.syntax-comment { color: #64748b; font-style: italic; }
+.syntax-function { color: #c084fc; font-weight: 600; }

@@ -7,4 +7,15 @@ build/
 .pytest_cache/
 *.egg
 .env
-.venv
+.env.*
+*.env
+.venv/
+env/
+venv/
+*.pem
+*.key
+*.cert
+*.crt
+credentials*.json
+.DS_Store
+Thumbs.db

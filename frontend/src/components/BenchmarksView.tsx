@@ -51,9 +51,9 @@ interface BenchmarksViewProps {
 
 const ENGINE_COLORS: Record<string, string> = {
   naive: '#f43f5e', // Rose
-  kv_cache: '#4edea3', // Primary Emerald
-  paged: '#4cd7f6', // Secondary Cyan
-  quantized: '#c0c1ff', // Tertiary Purple
+  kv_cache: '#38bdf8', // Primary Sky
+  paged: '#2dd4bf', // Secondary Teal
+  quantized: '#a78bfa', // Tertiary Violet
   continuous_batching: '#f59e0b', // Amber
 };
 
@@ -257,24 +257,24 @@ export const BenchmarksView: React.FC<BenchmarksViewProps> = ({
   const primaryResult = currentResults.find((r) => r.engine === 'kv_cache') || currentResults[0];
 
   return (
-    <div className="pt-4 px-4 sm:px-8 max-w-[1440px] mx-auto pb-12 space-y-6 font-mono text-xs">
+    <div className="pt-4 px-4 sm:px-8 max-w-[1440px] mx-auto pb-12 space-y-6 font-sans text-xs">
       {/* Top Banner & Benchmark Controls */}
-      <div className="cyber-card p-6 rounded-2xl border border-primary/30 bg-surface-dim space-y-5">
+      <div className="p-5 rounded-xl border border-outline-variant bg-surface-container space-y-5 shadow-subtle">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-primary/10 border border-primary/30 text-primary">
-                <Gauge className="w-5 h-5" />
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-lg bg-surface-lowest border border-outline-variant text-primary">
+                <Gauge className="w-4 h-4" />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-on-surface font-sans flex items-center gap-2">
-                  <span>Universal Computer Benchmark Hub</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/40">
-                    Live Hardware Profiler
+                <h1 className="text-base font-semibold text-slate-100 font-sans flex items-center gap-2">
+                  <span>Hardware Inference Profiler</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-white/[0.05] text-slate-400 border border-outline-variant font-mono">
+                    Live Profiler
                   </span>
                 </h1>
-                <p className="text-xs text-on-surface-variant">
-                  Evaluate your computer's CPU/GPU compute throughput and memory bandwidth with {modelMeta?.model_name || 'loaded model'}
+                <p className="text-xs text-slate-400">
+                  Evaluate local compute throughput and memory bandwidth with {modelMeta?.model_name || 'loaded model'}
                 </p>
               </div>
             </div>
@@ -285,26 +285,26 @@ export const BenchmarksView: React.FC<BenchmarksViewProps> = ({
             {onOpenModelLoader && (
               <button
                 onClick={onOpenModelLoader}
-                className="px-3 py-1.5 rounded-xl bg-surface-lowest border border-outline-variant/40 hover:border-primary/50 text-on-surface-variant hover:text-primary transition-all flex items-center gap-1.5 cursor-pointer text-xs"
+                className="px-3 py-1.5 rounded-lg bg-surface-lowest hover:bg-surface-high border border-outline-variant hover:border-white/[0.16] text-slate-300 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer text-xs shadow-subtle font-medium"
               >
-                <Layers className="w-3.5 h-3.5" />
+                <Layers className="w-3.5 h-3.5 text-primary" />
                 <span>Change Model</span>
               </button>
             )}
             <button
               onClick={handleRunBenchmark}
               disabled={!serverOnline || isRunning}
-              className="px-6 py-2.5 rounded-xl bg-primary text-on-primary font-bold hover:brightness-110 shadow-glow-cyan flex items-center gap-2 transition-all disabled:opacity-50 cursor-pointer text-xs uppercase tracking-wider"
+              className="px-4 py-2 rounded-lg bg-primary hover:bg-sky-300 text-slate-950 font-medium shadow-subtle flex items-center gap-2 transition-all disabled:opacity-50 cursor-pointer text-xs active:scale-[0.99]"
             >
               {isRunning ? (
                 <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                   <span>Running Benchmark...</span>
                 </>
               ) : (
                 <>
-                  <Play className="w-4 h-4 fill-current" />
-                  <span>Run Computer Benchmark</span>
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>Run Benchmark</span>
                 </>
               )}
             </button>
@@ -312,44 +312,44 @@ export const BenchmarksView: React.FC<BenchmarksViewProps> = ({
         </div>
 
         {/* Benchmark Workload Selector */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5 pt-1">
           {[
-            { id: 'quick', title: 'Quick Sanity Test', tokens: 32, desc: '32 Tokens • Ultra-fast verification' },
-            { id: 'standard', title: 'Standard Benchmark', tokens: 128, desc: '128 Tokens • Recommended balanced suite' },
-            { id: 'deep', title: 'Deep Stress Test', tokens: 256, desc: '256 Tokens • Long context memory scaling' },
+            { id: 'quick', title: 'Quick Sanity Test', tokens: 32, desc: '32 Tokens • Fast verification' },
+            { id: 'standard', title: 'Standard Benchmark', tokens: 128, desc: '128 Tokens • Balanced suite' },
+            { id: 'deep', title: 'Deep Stress Test', tokens: 256, desc: '256 Tokens • Long context memory' },
             { id: 'custom', title: 'Custom Workload', tokens: customTokens, desc: 'Custom prompt & token length' },
           ].map((suite) => (
             <button
               key={suite.id}
               onClick={() => setBenchmarkSuite(suite.id as any)}
               disabled={isRunning}
-              className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+              className={`p-3 rounded-lg border text-left transition-all cursor-pointer shadow-subtle ${
                 benchmarkSuite === suite.id
-                  ? 'bg-primary/10 border-primary text-primary shadow-glow-cyan'
-                  : 'bg-surface-lowest/70 border-outline-variant/30 text-on-surface-variant hover:border-primary/30 hover:text-on-surface'
+                  ? 'bg-surface-high border-primary/50 text-slate-100'
+                  : 'bg-surface-lowest hover:bg-surface-high border-outline-variant text-slate-400 hover:text-slate-200'
               }`}
             >
-              <div className="font-bold text-xs">{suite.title}</div>
-              <div className="text-[10px] text-on-surface-variant/80 mt-1">{suite.desc}</div>
+              <div className="font-semibold text-xs text-slate-200">{suite.title}</div>
+              <div className="text-[11px] text-slate-400 mt-0.5">{suite.desc}</div>
             </button>
           ))}
         </div>
 
         {/* Custom Input (if selected) */}
         {benchmarkSuite === 'custom' && (
-          <div className="p-4 rounded-xl bg-surface-lowest border border-outline-variant/30 grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="p-3.5 rounded-lg bg-surface-lowest border border-outline-variant grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="md:col-span-2 space-y-1">
-              <label className="text-[10px] text-on-surface-variant uppercase font-bold">Custom Benchmark Prompt</label>
+              <label className="text-[10px] text-slate-400 uppercase font-semibold font-mono">Custom Benchmark Prompt</label>
               <input
                 type="text"
                 value={customPrompt}
                 onChange={(e) => setCustomPrompt(e.target.value)}
                 disabled={isRunning}
-                className="w-full bg-surface-dim border border-outline-variant/50 focus:border-primary rounded-lg px-3 py-2 text-xs text-on-surface outline-none"
+                className="w-full bg-surface-container border border-outline-variant focus:border-primary/50 rounded-lg px-3 py-1.5 text-xs text-slate-200 outline-none"
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] text-on-surface-variant uppercase font-bold">Max Output Tokens</label>
+              <label className="text-[10px] text-slate-400 uppercase font-semibold font-mono">Max Output Tokens</label>
               <input
                 type="number"
                 value={customTokens}
@@ -357,22 +357,22 @@ export const BenchmarksView: React.FC<BenchmarksViewProps> = ({
                 min={16}
                 max={1024}
                 disabled={isRunning}
-                className="w-full bg-surface-dim border border-outline-variant/50 focus:border-primary rounded-lg px-3 py-2 text-xs text-on-surface outline-none"
+                className="w-full bg-surface-container border border-outline-variant focus:border-primary/50 rounded-lg px-3 py-1.5 text-xs text-slate-200 outline-none"
               />
             </div>
           </div>
         )}
 
         {/* Engine Selection & Concurrency Toggles */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pt-1 border-t border-outline-variant/20 text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-1 border-t border-outline-variant text-xs">
           <div className="flex items-center gap-4">
-            <span className="text-[10px] uppercase font-bold text-on-surface-variant">Include Engines:</span>
+            <span className="text-[10px] uppercase font-semibold text-slate-400 font-mono">Engines:</span>
             {[
               { id: 'kv_cache', label: 'KV-Cache (Stage 2)' },
               { id: 'naive', label: 'Naive Baseline (Stage 1)' },
               { id: 'paged', label: 'Paged Attention (Stage 4)' },
             ].map((eng) => (
-              <label key={eng.id} className="flex items-center gap-1.5 cursor-pointer text-on-surface hover:text-primary transition-colors">
+              <label key={eng.id} className="flex items-center gap-1.5 cursor-pointer text-slate-300 hover:text-slate-100 transition-colors">
                 <input
                   type="checkbox"
                   checked={selectedEngines.includes(eng.id)}
@@ -391,7 +391,7 @@ export const BenchmarksView: React.FC<BenchmarksViewProps> = ({
             ))}
           </div>
 
-          <label className="flex items-center gap-1.5 cursor-pointer text-on-surface hover:text-amber-400 transition-colors">
+          <label className="flex items-center gap-1.5 cursor-pointer text-slate-300 hover:text-slate-100 transition-colors">
             <input
               type="checkbox"
               checked={includeBatchScaling}
@@ -399,117 +399,117 @@ export const BenchmarksView: React.FC<BenchmarksViewProps> = ({
               disabled={isRunning}
               className="rounded border-outline-variant text-amber-500 focus:ring-amber-500 accent-amber-500"
             />
-            <span className="text-[11px]">Include Concurrency Batch Scaling (B=1,2,4,8)</span>
+            <span className="text-[11px]">Concurrency Batch Scaling (B=1,2,4,8)</span>
           </label>
         </div>
 
         {/* Running Step Status Feedback */}
         {isRunning && (
-          <div className="p-4 rounded-xl bg-surface-lowest border border-primary/40 space-y-2 animate-pulse">
-            <div className="flex items-center justify-between text-primary font-bold text-xs">
+          <div className="p-3.5 rounded-lg bg-surface-lowest border border-primary/40 space-y-1.5">
+            <div className="flex items-center justify-between text-primary font-medium text-xs">
               <div className="flex items-center gap-2">
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                <span>Running Computer Benchmark Suite...</span>
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                <span>Running benchmark suite...</span>
               </div>
-              <span className="text-[10px] text-on-surface-variant">Synchronizing CUDA timers</span>
+              <span className="text-[10px] text-slate-400 font-mono">Synchronizing CUDA timers</span>
             </div>
-            <p className="text-[11px] text-on-surface-variant">{runningStep}</p>
+            <p className="text-[11px] text-slate-400">{runningStep}</p>
           </div>
         )}
       </div>
 
-      {/* Official Computer Performance Scorecard Banner */}
+      {/* Official Performance Scorecard */}
       {primaryResult && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Card 1: Score */}
-          <div className="cyber-card p-5 rounded-2xl border border-primary/40 bg-surface-dim relative overflow-hidden flex flex-col justify-between">
+          <div className="p-5 rounded-xl border border-outline-variant bg-surface-container relative overflow-hidden flex flex-col justify-between shadow-subtle">
             <div className="flex items-start justify-between">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-primary">
-                Computer Inference Score
+              <span className="text-[10px] uppercase font-semibold tracking-wider text-slate-400 font-mono">
+                Inference Score
               </span>
-              <Award className="w-5 h-5 text-primary" />
+              <Award className="w-4 h-4 text-primary" />
             </div>
             <div className="py-2">
-              <div className="text-3xl font-extrabold text-primary font-sans flex items-baseline gap-1">
+              <div className="text-3xl font-semibold text-slate-100 font-sans tracking-tight flex items-baseline gap-1.5">
                 <span>{scoreData?.score || 850}</span>
-                <span className="text-xs font-mono font-normal text-on-surface-variant">PTS</span>
+                <span className="text-xs font-mono font-normal text-slate-400">pts</span>
               </div>
-              <div className="text-[11px] font-bold text-on-surface mt-1">
+              <div className="text-[11px] font-medium text-slate-300 mt-1">
                 {scoreData?.tier || 'High-Performance GPU'}
               </div>
             </div>
-            <div className="text-[10px] text-on-surface-variant pt-2 border-t border-outline-variant/20 flex items-center justify-between">
-              <span>Tier Badge: {scoreData?.badge || 'Tier A'}</span>
-              <span className="text-primary font-bold">Standardized</span>
+            <div className="text-[10px] text-slate-400 pt-2 border-t border-outline-variant flex items-center justify-between font-mono">
+              <span>Tier: {scoreData?.badge || 'Tier A'}</span>
+              <span className="text-slate-300 font-medium">Standardized</span>
             </div>
           </div>
 
           {/* Card 2: Peak Throughput */}
-          <div className="cyber-card p-5 rounded-2xl border border-secondary/40 bg-surface-dim relative overflow-hidden flex flex-col justify-between">
+          <div className="p-5 rounded-xl border border-outline-variant bg-surface-container relative overflow-hidden flex flex-col justify-between shadow-subtle">
             <div className="flex items-start justify-between">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-secondary">
-                Generation Throughput
+              <span className="text-[10px] uppercase font-semibold tracking-wider text-slate-400 font-mono">
+                Throughput
               </span>
-              <TrendingUp className="w-5 h-5 text-secondary" />
+              <TrendingUp className="w-4 h-4 text-sky-400" />
             </div>
             <div className="py-2">
-              <div className="text-3xl font-extrabold text-secondary font-sans flex items-baseline gap-1">
-                <span>{primaryResult.throughput_tok_s || primaryResult.tokens_per_sec || 0}</span>
-                <span className="text-xs font-mono font-normal text-on-surface-variant">tok/s</span>
+              <div className="text-3xl font-semibold text-sky-400 font-sans tracking-tight flex items-baseline gap-1.5">
+                <span className="tabular-nums">{primaryResult.throughput_tok_s || primaryResult.tokens_per_sec || 0}</span>
+                <span className="text-xs font-mono font-normal text-slate-400">tok/s</span>
               </div>
-              <div className="text-[11px] text-on-surface mt-1">
-                Decode Latency: <span className="font-bold text-secondary">{primaryResult.tpot_ms}ms</span> / token
+              <div className="text-[11px] text-slate-300 mt-1">
+                Decode: <span className="font-semibold text-slate-100 font-mono tabular-nums">{primaryResult.tpot_ms}ms</span> / tok
               </div>
             </div>
-            <div className="text-[10px] text-on-surface-variant pt-2 border-t border-outline-variant/20 flex items-center justify-between">
-              <span>Time to 1st Token (TTFT)</span>
-              <span className="text-secondary font-bold">{primaryResult.ttft_ms}ms</span>
+            <div className="text-[10px] text-slate-400 pt-2 border-t border-outline-variant flex items-center justify-between font-mono">
+              <span>TTFT (Prefill)</span>
+              <span className="text-slate-300 font-medium tabular-nums">{primaryResult.ttft_ms}ms</span>
             </div>
           </div>
 
           {/* Card 3: Memory Bandwidth */}
-          <div className="cyber-card p-5 rounded-2xl border border-tertiary/40 bg-surface-dim relative overflow-hidden flex flex-col justify-between">
+          <div className="p-5 rounded-xl border border-outline-variant bg-surface-container relative overflow-hidden flex flex-col justify-between shadow-subtle">
             <div className="flex items-start justify-between">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-tertiary">
-                Memory Bandwidth
+              <span className="text-[10px] uppercase font-semibold tracking-wider text-slate-400 font-mono">
+                Bandwidth
               </span>
-              <HardDrive className="w-5 h-5 text-tertiary" />
+              <HardDrive className="w-4 h-4 text-violet-400" />
             </div>
             <div className="py-2">
-              <div className="text-3xl font-extrabold text-tertiary font-sans flex items-baseline gap-1">
-                <span>{primaryResult.memory_bandwidth_gbs || 95.2}</span>
-                <span className="text-xs font-mono font-normal text-on-surface-variant">GB/s</span>
+              <div className="text-3xl font-semibold text-violet-400 font-sans tracking-tight flex items-baseline gap-1.5">
+                <span className="tabular-nums">{primaryResult.memory_bandwidth_gbs || 95.2}</span>
+                <span className="text-xs font-mono font-normal text-slate-400">GB/s</span>
               </div>
-              <div className="text-[11px] text-on-surface mt-1">
-                Achieved Weight Streaming Rate
+              <div className="text-[11px] text-slate-300 mt-1">
+                Weight Streaming Rate
               </div>
             </div>
-            <div className="text-[10px] text-on-surface-variant pt-2 border-t border-outline-variant/20 flex items-center justify-between">
-              <span>Peak VRAM Allocated</span>
-              <span className="text-tertiary font-bold">{Math.round(primaryResult.peak_vram_mb)} MB</span>
+            <div className="text-[10px] text-slate-400 pt-2 border-t border-outline-variant flex items-center justify-between font-mono">
+              <span>Peak VRAM</span>
+              <span className="text-slate-300 font-medium tabular-nums">{Math.round(primaryResult.peak_vram_mb)} MB</span>
             </div>
           </div>
 
           {/* Card 4: Algorithmic Speedup */}
-          <div className="cyber-card p-5 rounded-2xl border border-amber-500/40 bg-surface-dim relative overflow-hidden flex flex-col justify-between">
+          <div className="p-5 rounded-xl border border-outline-variant bg-surface-container relative overflow-hidden flex flex-col justify-between shadow-subtle">
             <div className="flex items-start justify-between">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-amber-400">
-                KV-Cache Optimization
+              <span className="text-[10px] uppercase font-semibold tracking-wider text-slate-400 font-mono">
+                KV Speedup
               </span>
-              <Zap className="w-5 h-5 text-amber-400" />
+              <Zap className="w-4 h-4 text-amber-400" />
             </div>
             <div className="py-2">
-              <div className="text-3xl font-extrabold text-amber-400 font-sans flex items-baseline gap-1">
-                <span>{primaryResult.speedup || primaryResult.speedup_vs_naive || 3.8}x</span>
-                <span className="text-xs font-mono font-normal text-on-surface-variant">faster</span>
+              <div className="text-3xl font-semibold text-amber-400 font-sans tracking-tight flex items-baseline gap-1.5">
+                <span className="tabular-nums">{primaryResult.speedup || primaryResult.speedup_vs_naive || 3.8}x</span>
+                <span className="text-xs font-mono font-normal text-slate-400">faster</span>
               </div>
-              <div className="text-[11px] text-on-surface mt-1">
-                vs Naive O(N²) Recomputation
+              <div className="text-[11px] text-slate-300 mt-1">
+                vs Naive O(N²) Baseline
               </div>
             </div>
-            <div className="text-[10px] text-on-surface-variant pt-2 border-t border-outline-variant/20 flex items-center justify-between">
+            <div className="text-[10px] text-slate-400 pt-2 border-t border-outline-variant flex items-center justify-between font-mono">
               <span>Quadratic Waste</span>
-              <span className="text-amber-400 font-bold">100% Eliminated</span>
+              <span className="text-amber-400 font-medium">Eliminated</span>
             </div>
           </div>
         </div>
@@ -517,29 +517,29 @@ export const BenchmarksView: React.FC<BenchmarksViewProps> = ({
 
       {/* Visual Recharts Section */}
       {currentResults.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Chart 1: Throughput tok/s */}
-          <div className="cyber-card p-5 rounded-2xl border border-outline-variant/30 bg-surface-dim space-y-4">
+          <div className="p-5 rounded-xl border border-outline-variant bg-surface-container space-y-4 shadow-subtle">
             <div className="flex items-center justify-between">
-              <div className="font-bold text-sm text-on-surface flex items-center gap-2">
+              <div className="font-semibold text-sm text-slate-100 flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-primary" />
                 <span>Generation Throughput (Tokens / Sec)</span>
               </div>
-              <span className="text-[10px] text-on-surface-variant">Higher is better</span>
+              <span className="text-[10px] text-slate-400 font-mono">Higher is better</span>
             </div>
             <div className="h-[220px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={throughputData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#2a2e37" />
-                  <XAxis dataKey="name" stroke="#9ca3af" fontSize={10} tickLine={false} />
-                  <YAxis stroke="#9ca3af" fontSize={10} tickLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.05)" />
+                  <XAxis dataKey="name" stroke="#64748b" fontSize={10} tickLine={false} />
+                  <YAxis stroke="#64748b" fontSize={10} tickLine={false} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#131822', borderColor: '#374151', borderRadius: '8px', fontSize: '11px' }}
+                    contentStyle={{ backgroundColor: '#14171f', borderColor: 'rgba(255, 255, 255, 0.1)', borderRadius: '8px', fontSize: '11px', color: '#f1f5f9' }}
                     formatter={(val: any) => [`${val} tok/s`, 'Throughput']}
                   />
-                  <Bar dataKey="throughput" radius={[6, 6, 0, 0]}>
+                  <Bar dataKey="throughput" radius={[4, 4, 0, 0]}>
                     {throughputData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={ENGINE_COLORS[entry.engine] || '#4edea3'} />
+                      <Cell key={`cell-${index}`} fill={ENGINE_COLORS[entry.engine] || '#38bdf8'} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -548,25 +548,25 @@ export const BenchmarksView: React.FC<BenchmarksViewProps> = ({
           </div>
 
           {/* Chart 2: Latency Breakdown (TTFT vs TPOT) */}
-          <div className="cyber-card p-5 rounded-2xl border border-outline-variant/30 bg-surface-dim space-y-4">
+          <div className="p-5 rounded-xl border border-outline-variant bg-surface-container space-y-4 shadow-subtle">
             <div className="flex items-center justify-between">
-              <div className="font-bold text-sm text-on-surface flex items-center gap-2">
-                <Timer className="w-4 h-4 text-secondary" />
+              <div className="font-semibold text-sm text-slate-100 flex items-center gap-2">
+                <Timer className="w-4 h-4 text-teal-400" />
                 <span>Latency Breakdown (TTFT & TPOT in ms)</span>
               </div>
-              <span className="text-[10px] text-on-surface-variant">Lower is better</span>
+              <span className="text-[10px] text-slate-400 font-mono">Lower is better</span>
             </div>
             <div className="h-[220px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={latencyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#2a2e37" />
-                  <XAxis dataKey="name" stroke="#9ca3af" fontSize={10} tickLine={false} />
-                  <YAxis stroke="#9ca3af" fontSize={10} tickLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.05)" />
+                  <XAxis dataKey="name" stroke="#64748b" fontSize={10} tickLine={false} />
+                  <YAxis stroke="#64748b" fontSize={10} tickLine={false} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#131822', borderColor: '#374151', borderRadius: '8px', fontSize: '11px' }}
+                    contentStyle={{ backgroundColor: '#14171f', borderColor: 'rgba(255, 255, 255, 0.1)', borderRadius: '8px', fontSize: '11px', color: '#f1f5f9' }}
                   />
                   <Legend wrapperStyle={{ fontSize: '10px' }} />
-                  <Bar dataKey="ttft" name="TTFT (Prefill ms)" fill="#4cd7f6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="ttft" name="TTFT (Prefill ms)" fill="#2dd4bf" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="tpot" name="TPOT (Decode ms)" fill="#f59e0b" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -574,50 +574,50 @@ export const BenchmarksView: React.FC<BenchmarksViewProps> = ({
           </div>
 
           {/* Chart 3: Memory Bandwidth & VRAM */}
-          <div className="cyber-card p-5 rounded-2xl border border-outline-variant/30 bg-surface-dim space-y-4">
+          <div className="p-5 rounded-xl border border-outline-variant bg-surface-container space-y-4 shadow-subtle">
             <div className="flex items-center justify-between">
-              <div className="font-bold text-sm text-on-surface flex items-center gap-2">
-                <HardDrive className="w-4 h-4 text-tertiary" />
+              <div className="font-semibold text-sm text-slate-100 flex items-center gap-2">
+                <HardDrive className="w-4 h-4 text-violet-400" />
                 <span>Peak Memory Allocation (MB)</span>
               </div>
-              <span className="text-[10px] text-on-surface-variant">Footprint during generation</span>
+              <span className="text-[10px] text-slate-400 font-mono">Footprint during generation</span>
             </div>
             <div className="h-[220px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={memoryData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#2a2e37" />
-                  <XAxis dataKey="name" stroke="#9ca3af" fontSize={10} tickLine={false} />
-                  <YAxis stroke="#9ca3af" fontSize={10} tickLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.05)" />
+                  <XAxis dataKey="name" stroke="#64748b" fontSize={10} tickLine={false} />
+                  <YAxis stroke="#64748b" fontSize={10} tickLine={false} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#131822', borderColor: '#374151', borderRadius: '8px', fontSize: '11px' }}
+                    contentStyle={{ backgroundColor: '#14171f', borderColor: 'rgba(255, 255, 255, 0.1)', borderRadius: '8px', fontSize: '11px', color: '#f1f5f9' }}
                     formatter={(val: any) => [`${val} MB`, 'Peak VRAM']}
                   />
-                  <Bar dataKey="vram" fill="#c0c1ff" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="vram" fill="#a78bfa" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
 
           {/* Chart 4: Concurrency Batch Scaling */}
-          <div className="cyber-card p-5 rounded-2xl border border-outline-variant/30 bg-surface-dim space-y-4">
+          <div className="p-5 rounded-xl border border-outline-variant bg-surface-container space-y-4 shadow-subtle">
             <div className="flex items-center justify-between">
-              <div className="font-bold text-sm text-on-surface flex items-center gap-2">
+              <div className="font-semibold text-sm text-slate-100 flex items-center gap-2">
                 <Layers className="w-4 h-4 text-amber-400" />
                 <span>Concurrency Batch Scaling (Stage 3 Throughput)</span>
               </div>
-              <span className="text-[10px] text-on-surface-variant">Aggregate tok/s</span>
+              <span className="text-[10px] text-slate-400 font-mono">Aggregate tok/s</span>
             </div>
             <div className="h-[220px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={batchChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#2a2e37" />
-                  <XAxis dataKey="batch" stroke="#9ca3af" fontSize={10} tickLine={false} />
-                  <YAxis stroke="#9ca3af" fontSize={10} tickLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.05)" />
+                  <XAxis dataKey="batch" stroke="#64748b" fontSize={10} tickLine={false} />
+                  <YAxis stroke="#64748b" fontSize={10} tickLine={false} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#131822', borderColor: '#374151', borderRadius: '8px', fontSize: '11px' }}
+                    contentStyle={{ backgroundColor: '#14171f', borderColor: 'rgba(255, 255, 255, 0.1)', borderRadius: '8px', fontSize: '11px', color: '#f1f5f9' }}
                     formatter={(val: any) => [`${val} tok/s`, 'Aggregate Speed']}
                   />
-                  <Line type="monotone" dataKey="throughput" stroke="#f59e0b" strokeWidth={3} dot={{ r: 5, fill: '#f59e0b' }} />
+                  <Line type="monotone" dataKey="throughput" stroke="#f59e0b" strokeWidth={2} dot={{ r: 4, fill: '#f59e0b' }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -627,9 +627,9 @@ export const BenchmarksView: React.FC<BenchmarksViewProps> = ({
 
       {/* Detailed Benchmark Matrix Table */}
       {currentResults.length > 0 && (
-        <div className="cyber-card p-5 rounded-2xl border border-outline-variant/30 bg-surface-dim space-y-4">
+        <div className="p-5 rounded-xl border border-outline-variant bg-surface-container space-y-4 shadow-subtle">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="font-bold text-sm text-on-surface flex items-center gap-2">
+            <div className="font-semibold text-sm text-slate-100 flex items-center gap-2">
               <Gauge className="w-4 h-4 text-primary" />
               <span>Full Engine Benchmark Matrix</span>
             </div>
@@ -638,14 +638,14 @@ export const BenchmarksView: React.FC<BenchmarksViewProps> = ({
             <div className="flex items-center gap-2">
               <button
                 onClick={handleCopyCard}
-                className="px-3 py-1.5 rounded-lg bg-surface-lowest border border-outline-variant/40 hover:border-primary/50 text-on-surface-variant hover:text-primary transition-all flex items-center gap-1.5 cursor-pointer text-xs"
+                className="px-3 py-1.5 rounded-lg bg-surface-lowest hover:bg-surface-high border border-outline-variant hover:border-white/[0.16] text-slate-300 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer text-xs shadow-subtle font-medium"
               >
-                {copyStatus ? <Check className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5" />}
+                {copyStatus ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copyStatus ? 'Copied Card!' : 'Copy Summary'}</span>
               </button>
               <button
                 onClick={handleExportJSON}
-                className="px-3 py-1.5 rounded-lg bg-surface-lowest border border-outline-variant/40 hover:border-primary/50 text-on-surface-variant hover:text-primary transition-all flex items-center gap-1.5 cursor-pointer text-xs"
+                className="px-3 py-1.5 rounded-lg bg-surface-lowest hover:bg-surface-high border border-outline-variant hover:border-white/[0.16] text-slate-300 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer text-xs shadow-subtle font-medium"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Export JSON</span>
@@ -654,9 +654,9 @@ export const BenchmarksView: React.FC<BenchmarksViewProps> = ({
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b border-surface-container text-on-surface-variant text-[10px] uppercase font-bold">
+                <tr className="border-b border-outline-variant text-slate-400 text-[10px] uppercase font-semibold font-mono">
                   <th className="py-2.5 px-3">Engine Stage</th>
                   <th className="py-2.5 px-3">Throughput</th>
                   <th className="py-2.5 px-3">TTFT (Prefill)</th>
@@ -666,26 +666,26 @@ export const BenchmarksView: React.FC<BenchmarksViewProps> = ({
                   <th className="py-2.5 px-3">Speedup vs Naive</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-surface-container/40">
+              <tbody className="divide-y divide-outline-variant">
                 {currentResults.map((r) => (
-                  <tr key={r.engine} className="hover:bg-surface-lowest/40 transition-colors">
-                    <td className="py-3 px-3 font-bold text-on-surface flex items-center gap-2">
+                  <tr key={r.engine} className="hover:bg-white/[0.02] transition-colors">
+                    <td className="py-2.5 px-3 font-medium text-slate-200 flex items-center gap-2">
                       <span
-                        className="w-2.5 h-2.5 rounded-full"
-                        style={{ backgroundColor: ENGINE_COLORS[r.engine] || '#4edea3' }}
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: ENGINE_COLORS[r.engine] || '#38bdf8' }}
                       />
                       <span>{r.engine_name}</span>
                     </td>
-                    <td className="py-3 px-3 text-primary font-bold">
+                    <td className="py-2.5 px-3 text-sky-400 font-semibold font-mono tabular-nums">
                       {(r.throughput_tok_s || r.tokens_per_sec || 0).toFixed(1)} tok/s
                     </td>
-                    <td className="py-3 px-3 text-on-surface-variant">{r.ttft_ms.toFixed(1)} ms</td>
-                    <td className="py-3 px-3 text-on-surface-variant">{r.tpot_ms.toFixed(1)} ms</td>
-                    <td className="py-3 px-3 text-on-surface-variant">{Math.round(r.peak_vram_mb)} MB</td>
-                    <td className="py-3 px-3 text-tertiary font-bold">
+                    <td className="py-2.5 px-3 text-slate-300 font-mono tabular-nums">{r.ttft_ms.toFixed(1)} ms</td>
+                    <td className="py-2.5 px-3 text-slate-300 font-mono tabular-nums">{r.tpot_ms.toFixed(1)} ms</td>
+                    <td className="py-2.5 px-3 text-slate-300 font-mono tabular-nums">{Math.round(r.peak_vram_mb)} MB</td>
+                    <td className="py-2.5 px-3 text-violet-400 font-mono tabular-nums font-medium">
                       {r.memory_bandwidth_gbs ? `${r.memory_bandwidth_gbs.toFixed(1)} GB/s` : 'N/A'}
                     </td>
-                    <td className="py-3 px-3 text-amber-400 font-bold">
+                    <td className="py-2.5 px-3 text-amber-400 font-mono tabular-nums font-semibold">
                       {(r.speedup || r.speedup_vs_naive || 1.0).toFixed(2)}x
                     </td>
                   </tr>
