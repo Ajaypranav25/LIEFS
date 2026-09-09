@@ -16,7 +16,10 @@ from liefs.kv_cache_engine import KVCacheEngine
 
 @pytest.fixture(scope="module")
 def model_and_tokenizer():
-    model, tokenizer = load_model_and_tokenizer()
+    # Load model with float32 for CPU to prevent numerical instability differences causing exact-match assertion failures
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+    model, tokenizer = load_model_and_tokenizer(device=device, dtype=dtype)
     return model, tokenizer
 
 
