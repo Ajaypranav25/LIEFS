@@ -13,7 +13,8 @@ from liefs.paged_attention import BlockAllocator, PagedKVCache
 
 @pytest.fixture(scope="module")
 def model_and_tokenizer():
-    model, tokenizer = load_model_and_tokenizer()
+    dtype = torch.float32 if not torch.cuda.is_available() else torch.float16
+    model, tokenizer = load_model_and_tokenizer(dtype=dtype)
     return model, tokenizer
 
 
