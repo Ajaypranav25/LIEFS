@@ -2,7 +2,6 @@
 Pydantic schemas for the LIEFS Universal LLM & Computer Benchmarking Server.
 """
 
-from typing import Optional, Any
 from pydantic import BaseModel, Field
 
 
@@ -40,7 +39,7 @@ class ModelLoadRequest(BaseModel):
     model_name: str = Field(default="Qwen/Qwen2.5-0.5B-Instruct", max_length=256)
     precision: str = Field(default="float16", max_length=32)
     device: str = Field(default="auto", max_length=32)
-    hf_token: Optional[str] = Field(default=None, max_length=256)
+    hf_token: str | None = Field(default=None, max_length=256)
 
 
 class ModelLoadResponse(BaseModel):

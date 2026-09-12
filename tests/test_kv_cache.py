@@ -9,14 +9,14 @@ all basic correctness properties hold.
 import pytest
 import torch
 
-from liefs.model_loader import load_model_and_tokenizer, format_chat_prompt
-from liefs.naive_engine import NaiveEngine
 from liefs.kv_cache_engine import KVCacheEngine
+from liefs.model_loader import format_chat_prompt, load_model_and_tokenizer
+from liefs.naive_engine import NaiveEngine
 
 
 @pytest.fixture(scope="module")
 def model_and_tokenizer():
-    model, tokenizer = load_model_and_tokenizer()
+    model, tokenizer = load_model_and_tokenizer(dtype=torch.float32)
     return model, tokenizer
 
 

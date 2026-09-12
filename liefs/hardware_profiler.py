@@ -5,12 +5,11 @@ Provides automated hardware inspection (CPU, GPU, RAM, VRAM, OS) and computes
 effective memory bandwidth and standardized computer benchmark scores.
 """
 
-import os
 import platform
+from dataclasses import asdict, dataclass
+
 import psutil
 import torch
-from dataclasses import dataclass, asdict
-from typing import Optional
 
 
 @dataclass
@@ -27,7 +26,7 @@ class HardwareProfile:
     cpu_model: str
     cpu_physical_cores: int
     cpu_logical_cores: int
-    cpu_freq_mhz: Optional[float]
+    cpu_freq_mhz: float | None
     ram_total_gb: float
     ram_available_gb: float
     ram_usage_percent: float
@@ -36,14 +35,14 @@ class HardwareProfile:
     cuda_available: bool
     gpu_count: int
     gpu_name: str
-    gpu_compute_capability: Optional[str]
+    gpu_compute_capability: str | None
     vram_total_mb: float
     vram_free_mb: float
     vram_allocated_mb: float
     vram_reserved_mb: float
     vram_usage_percent: float
-    driver_version: Optional[str] = None
-    cuda_version: Optional[str] = None
+    driver_version: str | None = None
+    cuda_version: str | None = None
     
     def to_dict(self) -> dict:
         return asdict(self)

@@ -3,7 +3,6 @@ Stage 4: Simplified paged attention — block-based KV-cache storage.
 """
 
 from dataclasses import dataclass
-from typing import Optional
 
 import torch
 
@@ -40,8 +39,8 @@ class BlockAllocator:
         num_layers: int,
         num_kv_heads: int,
         head_dim: int,
-        device: str = "cuda",
-        dtype: torch.dtype = torch.float16,
+        device: str = "cpu",
+        dtype: torch.dtype = torch.float32,
     ):
         self.num_blocks = num_blocks
         self.block_size = block_size
@@ -146,7 +145,7 @@ class PagedKVCache:
             filled_in_block = max(0, min(self.block_size, min_toks - i * self.block_size))
             b.num_filled = filled_in_block
 
-    def get_kv(self, layer_idx: int) -> tuple[Optional[torch.Tensor], Optional[torch.Tensor]]:
+    def get_kv(self, layer_idx: int) -> tuple[torch.Tensor | None, torch.Tensor | None]:
         """Retrieve all cached K/V for a given layer by gathering from blocks."""
         total = self.total_tokens
         if total == 0 or not self.block_table:
