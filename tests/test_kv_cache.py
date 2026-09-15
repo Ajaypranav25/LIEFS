@@ -16,7 +16,7 @@ from liefs.kv_cache_engine import KVCacheEngine
 
 @pytest.fixture(scope="module")
 def model_and_tokenizer():
-    model, tokenizer = load_model_and_tokenizer()
+    model, tokenizer = load_model_and_tokenizer(dtype="float32")
     return model, tokenizer
 
 

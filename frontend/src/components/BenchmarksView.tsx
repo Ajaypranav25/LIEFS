@@ -80,6 +80,7 @@ export const BenchmarksView: React.FC<BenchmarksViewProps> = ({
 
   useEffect(() => {
     loadEnvironment();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadEnvironment = async () => {

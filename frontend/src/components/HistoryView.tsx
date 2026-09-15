@@ -28,7 +28,8 @@ export const HistoryView: React.FC = () => {
   };
 
   useEffect(() => {
-    loadHistory();
+    if (user?.id) loadHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   const handleExportJson = () => {

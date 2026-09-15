@@ -105,6 +105,7 @@ const AppContent: React.FC = () => {
     };
 
     syncUserSessions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   // Sync sessions to localStorage

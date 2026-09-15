@@ -40,13 +40,13 @@ export const ModelLoaderModal: React.FC<ModelLoaderModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
+      setErrorMsg(null);
+      setSelectedPresetId(currentModelName);
       fetchModelPresets()
         .then((res) => {
           if (res && res.presets) setPresets(res.presets);
         })
         .catch(console.warn);
-      setErrorMsg(null);
-      setSelectedPresetId(currentModelName);
     }
   }, [isOpen, currentModelName]);
 
