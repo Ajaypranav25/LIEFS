@@ -32,7 +32,20 @@ def kv_engine(model_and_tokenizer):
 @pytest.fixture(scope="module")
 def paged_engine(model_and_tokenizer):
     model, tokenizer = model_and_tokenizer
-    return PagedEngine(model, tokenizer, block_size=16, max_num_blocks=256)
+    engine = PagedEngine(model, tokenizer, block_size=16, max_num_blocks=256)
+
+    if not torch.cuda.is_available():
+        from liefs.paged_attention import BlockAllocator
+        engine.allocator = BlockAllocator(
+            num_blocks=256,
+            block_size=16,
+            num_layers=engine.num_layers,
+            num_kv_heads=engine.num_kv_heads,
+            head_dim=engine.head_dim,
+            device="cpu"
+        )
+
+    return engine
 
 
 class TestPagedCorrectness:
@@ -64,6 +77,7 @@ class TestBlockAllocator:
         allocator = BlockAllocator(
             num_blocks=4, block_size=8,
             num_layers=2, num_kv_heads=2, head_dim=64,
+            device="cpu",
         )
         assert allocator.num_free_blocks == 4
 
@@ -80,6 +94,7 @@ class TestBlockAllocator:
         allocator = BlockAllocator(
             num_blocks=2, block_size=4,
             num_layers=1, num_kv_heads=1, head_dim=32,
+            device="cpu",
         )
         allocator.allocate()
         allocator.allocate()
