@@ -81,8 +81,8 @@ export async function saveBenchmarkRun(
     const localRuns = getLocalRuns();
     const updated = [newRun, ...localRuns].slice(0, 50);
     localStorage.setItem(LOCAL_STORAGE_BENCHMARKS, JSON.stringify(updated));
-  } catch (e) {
-    console.error('Failed to save to localStorage:', e);
+  } catch {
+    console.error('Failed to save to localStorage');
   }
 
   return newRun;
@@ -105,7 +105,7 @@ export async function getBenchmarkHistory(userId?: string): Promise<SavedBenchma
     if (!error && data && data.length > 0) {
       try {
         localStorage.setItem(LOCAL_STORAGE_BENCHMARKS, JSON.stringify(data));
-      } catch (e) {
+      } catch {
         // ignore
       }
       return data as SavedBenchmarkRun[];
@@ -121,7 +121,7 @@ export function getLocalRuns(): SavedBenchmarkRun[] {
   try {
     const item = localStorage.getItem(LOCAL_STORAGE_BENCHMARKS);
     return item ? JSON.parse(item) : [];
-  } catch (e) {
+  } catch {
     return [];
   }
 }
@@ -167,7 +167,7 @@ export async function fetchUserChatSessions(userId?: string): Promise<ChatSessio
       // Cache locally
       try {
         localStorage.setItem(LOCAL_STORAGE_CHATS, JSON.stringify(sessions));
-      } catch (e) {
+      } catch {
         // ignore
       }
 

@@ -20,8 +20,8 @@ export const HistoryView: React.FC = () => {
     try {
       const data = await getBenchmarkHistory(user?.id);
       setHistory(data);
-    } catch (e) {
-      console.warn('Failed to load history:', e);
+    } catch {
+      console.warn('Failed to load history');
     } finally {
       setLoading(false);
     }

@@ -99,8 +99,8 @@ const AppContent: React.FC = () => {
             setActiveSessionId(cloudSessions[0].id);
           }
         }
-      } catch (e) {
-        console.warn('Failed to sync cloud sessions:', e);
+      } catch {
+        console.warn('Failed to sync cloud sessions');
       }
     };
 
@@ -111,7 +111,7 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     try {
       localStorage.setItem('liefs_chat_sessions', JSON.stringify(sessions));
-    } catch (e) {
+    } catch {
       console.warn('Failed to persist sessions:', e);
     }
   }, [sessions]);
@@ -126,7 +126,7 @@ const AppContent: React.FC = () => {
         ]);
         if (hw) setHardware(hw);
         if (meta) setModelMeta(meta);
-      } catch (e) {
+      } catch {
         console.warn('Failed to fetch environment:', e);
       }
     };

@@ -97,8 +97,8 @@ export const BenchmarksView: React.FC<BenchmarksViewProps> = ({
         const std = presets.benchmarks[1];
         setLiveResults(std.results);
       }
-    } catch (e) {
-      console.warn('Failed to load benchmark environment:', e);
+    } catch {
+      console.warn('Failed to load benchmark environment');
     }
   };
 

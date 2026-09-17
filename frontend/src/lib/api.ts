@@ -211,8 +211,8 @@ export async function streamCompletion(
                   callbacks.onToken(textChunk);
                 }
               }
-            } catch (e) {
-              console.warn('Failed to parse SSE line:', dataStr, e);
+            } catch {
+              console.warn('Failed to parse SSE line:', dataStr);
             }
           }
         }
