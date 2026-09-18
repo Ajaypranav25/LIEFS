@@ -13,7 +13,8 @@ from liefs.paged_attention import BlockAllocator, PagedKVCache
 
 @pytest.fixture(scope="module")
 def model_and_tokenizer():
-    model, tokenizer = load_model_and_tokenizer()
+    dtype = torch.float32 if not torch.cuda.is_available() else torch.float16
+    model, tokenizer = load_model_and_tokenizer(dtype=dtype)
     return model, tokenizer
 
 
@@ -61,9 +62,11 @@ class TestPagedCorrectness:
 
 class TestBlockAllocator:
     def test_allocate_and_free(self):
+        device = "cuda" if torch.cuda.is_available() else "cpu"
         allocator = BlockAllocator(
             num_blocks=4, block_size=8,
             num_layers=2, num_kv_heads=2, head_dim=64,
+            device=device,
         )
         assert allocator.num_free_blocks == 4
 
@@ -77,9 +80,11 @@ class TestBlockAllocator:
         assert allocator.num_free_blocks == 3
 
     def test_out_of_blocks(self):
+        device = "cuda" if torch.cuda.is_available() else "cpu"
         allocator = BlockAllocator(
             num_blocks=2, block_size=4,
             num_layers=1, num_kv_heads=1, head_dim=32,
+            device=device,
         )
         allocator.allocate()
         allocator.allocate()

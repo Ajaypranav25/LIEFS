@@ -43,6 +43,8 @@ class PagedEngine:
             num_layers=self.num_layers,
             num_kv_heads=self.num_kv_heads,
             head_dim=self.head_dim,
+            device=self.model.device,
+            dtype=self.model.dtype,
         )
 
         self.eos_token_ids = get_eos_token_ids(tokenizer)
