@@ -39,7 +39,7 @@ class BlockAllocator:
         num_layers: int,
         num_kv_heads: int,
         head_dim: int,
-        device: str = "cuda",
+        device: str = "auto",
         dtype: torch.dtype = torch.float16,
     ):
         self.num_blocks = num_blocks
@@ -47,7 +47,12 @@ class BlockAllocator:
         self.num_layers = num_layers
         self.num_kv_heads = num_kv_heads
         self.head_dim = head_dim
-        self.device = device
+
+        if device == "auto" or device == "cuda":
+            self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        else:
+            self.device = device
+
         self.dtype = dtype
 
         self.blocks: list[KVBlock] = []
@@ -59,11 +64,11 @@ class BlockAllocator:
                 block_size=block_size,
                 key_cache=torch.zeros(
                     num_layers, num_kv_heads, block_size, head_dim,
-                    device=device, dtype=dtype,
+                    device=self.device, dtype=dtype,
                 ),
                 value_cache=torch.zeros(
                     num_layers, num_kv_heads, block_size, head_dim,
-                    device=device, dtype=dtype,
+                    device=self.device, dtype=dtype,
                 ),
             )
             self.blocks.append(block)
