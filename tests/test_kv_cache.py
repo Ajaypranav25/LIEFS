@@ -7,7 +7,6 @@ all basic correctness properties hold.
 """
 
 import pytest
-import torch
 
 from liefs.model_loader import load_model_and_tokenizer, format_chat_prompt
 from liefs.naive_engine import NaiveEngine

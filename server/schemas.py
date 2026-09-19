@@ -2,7 +2,7 @@
 Pydantic schemas for the LIEFS Universal LLM & Computer Benchmarking Server.
 """
 
-from typing import Optional, Any
+from typing import Optional
 from pydantic import BaseModel, Field
 
 

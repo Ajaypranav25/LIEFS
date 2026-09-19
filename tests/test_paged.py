@@ -8,7 +8,7 @@ import torch
 from liefs.model_loader import load_model_and_tokenizer, format_chat_prompt
 from liefs.kv_cache_engine import KVCacheEngine
 from liefs.paged_engine import PagedEngine
-from liefs.paged_attention import BlockAllocator, PagedKVCache
+from liefs.paged_attention import BlockAllocator
 
 
 @pytest.fixture(scope="module")
@@ -64,6 +64,7 @@ class TestBlockAllocator:
         allocator = BlockAllocator(
             num_blocks=4, block_size=8,
             num_layers=2, num_kv_heads=2, head_dim=64,
+            device="cuda" if torch.cuda.is_available() else "cpu",
         )
         assert allocator.num_free_blocks == 4
 
@@ -80,6 +81,7 @@ class TestBlockAllocator:
         allocator = BlockAllocator(
             num_blocks=2, block_size=4,
             num_layers=1, num_kv_heads=1, head_dim=32,
+            device="cuda" if torch.cuda.is_available() else "cpu",
         )
         allocator.allocate()
         allocator.allocate()

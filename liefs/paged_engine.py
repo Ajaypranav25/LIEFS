@@ -11,7 +11,6 @@ from liefs.utils import (
     compute_generation_metrics,
     cuda_timer,
     get_eos_token_ids,
-    get_peak_vram_mb,
     reset_vram_stats,
 )
 
@@ -43,6 +42,7 @@ class PagedEngine:
             num_layers=self.num_layers,
             num_kv_heads=self.num_kv_heads,
             head_dim=self.head_dim,
+            device="cuda" if torch.cuda.is_available() else "cpu",
         )
 
         self.eos_token_ids = get_eos_token_ids(tokenizer)

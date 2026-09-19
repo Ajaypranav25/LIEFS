@@ -2,13 +2,11 @@
 Tests for universal model loading helpers, resolution, presets, and metadata.
 """
 
-import pytest
 import torch
 from liefs.model_loader import (
     resolve_dtype,
     resolve_device,
     POPULAR_MODEL_PRESETS,
-    DEFAULT_MODEL_NAME,
 )
 
 

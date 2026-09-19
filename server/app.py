@@ -17,7 +17,7 @@ import time
 import uuid
 import torch
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
@@ -26,7 +26,6 @@ from server.schemas import (
     CompletionResponse,
     CompletionChoice,
     CompletionUsage,
-    BenchmarkRunRequest,
     BenchmarkEngineResult,
     ModelLoadRequest,
     ModelLoadResponse,
@@ -51,7 +50,6 @@ from liefs.naive_engine import NaiveEngine
 from liefs.paged_engine import PagedEngine
 from liefs.scheduler import ContinuousBatchScheduler
 from liefs.utils import (
-    get_peak_vram_mb,
     reset_vram_stats,
 )
 

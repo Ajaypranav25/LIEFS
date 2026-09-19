@@ -2,7 +2,6 @@
 Tests for hardware profiling and computer scoring algorithms.
 """
 
-import pytest
 from liefs.hardware_profiler import (
     get_hardware_profile,
     calculate_effective_memory_bandwidth,

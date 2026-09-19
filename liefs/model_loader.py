@@ -7,11 +7,10 @@ and model architecture telemetry extraction.
 """
 
 import os
-import gc
 import torch
 from dataclasses import dataclass, asdict
 from typing import Optional, Any
-from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
 # Default model — lightweight, GQA, SwiGLU, RoPE, RMSNorm
@@ -147,12 +146,16 @@ def load_model_and_tokenizer(
     Returns:
         (model, tokenizer) tuple in eval mode.
     """
+    target_device = resolve_device(device)
+
     if isinstance(dtype, str):
         target_dtype = resolve_dtype(dtype)
     else:
         target_dtype = dtype
 
-    target_device = resolve_device(device)
+    if target_device == "cpu" and target_dtype == torch.float16:
+        # Use float32 on CPU to prevent numerical instability differences
+        target_dtype = torch.float32
 
     print(f"Loading model: {model_name}")
     print(f"  Target precision: {target_dtype}, Target device: {target_device}")
@@ -279,6 +282,7 @@ def format_chat_prompt(
             tokenize=True,
             add_generation_prompt=True,
             return_tensors="pt",
+            return_dict=False,
         )
     except Exception:
         # Fallback for tokenizers without chat templates or with syntax incompatibilities
