@@ -3,10 +3,9 @@ Correctness tests for Stage 3: Continuous batching scheduler.
 """
 
 import pytest
-import torch
 
-from liefs.model_loader import load_model_and_tokenizer, format_chat_prompt
 from liefs.kv_cache_engine import KVCacheEngine
+from liefs.model_loader import format_chat_prompt, load_model_and_tokenizer
 from liefs.scheduler import ContinuousBatchScheduler, RequestStatus
 
 

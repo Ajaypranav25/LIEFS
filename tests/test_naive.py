@@ -12,9 +12,8 @@ Usage:
 import pytest
 import torch
 
-from liefs.model_loader import load_model_and_tokenizer, format_chat_prompt
+from liefs.model_loader import format_chat_prompt, load_model_and_tokenizer
 from liefs.naive_engine import NaiveEngine
-
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 # We use module-scoped fixtures so the model is loaded once for all tests,
@@ -147,7 +146,8 @@ class TestMetrics:
         assert metrics.total_time_ms > 0
         assert metrics.ttft_ms > 0
         assert metrics.tokens_per_sec > 0
-        assert metrics.peak_vram_mb > 0
+        if torch.cuda.is_available():
+            assert metrics.peak_vram_mb > 0
 
     def test_ttft_less_than_total(self, engine, tokenizer):
         """TTFT should be less than total generation time."""

@@ -7,7 +7,8 @@ and multi-architecture EOS token resolution.
 
 import time
 from contextlib import contextmanager
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+
 import torch
 
 

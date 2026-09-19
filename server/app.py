@@ -15,44 +15,43 @@ import gc
 import json
 import time
 import uuid
-import torch
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Request
+
+import torch
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
-from server.schemas import (
-    CompletionRequest,
-    CompletionResponse,
-    CompletionChoice,
-    CompletionUsage,
-    BenchmarkRunRequest,
-    BenchmarkEngineResult,
-    ModelLoadRequest,
-    ModelLoadResponse,
-    ComputerBenchmarkRequest,
-    ComputerBenchmarkResponse,
-    BatchScalePoint,
-)
-from liefs.model_loader import (
-    load_model_and_tokenizer,
-    get_model_metadata,
-    format_chat_prompt,
-    DEFAULT_MODEL_NAME,
-    POPULAR_MODEL_PRESETS,
-)
 from liefs.hardware_profiler import (
-    get_hardware_profile,
-    calculate_effective_memory_bandwidth,
     calculate_computer_score,
+    calculate_effective_memory_bandwidth,
+    get_hardware_profile,
 )
 from liefs.kv_cache_engine import KVCacheEngine
+from liefs.model_loader import (
+    DEFAULT_MODEL_NAME,
+    POPULAR_MODEL_PRESETS,
+    format_chat_prompt,
+    get_model_metadata,
+    load_model_and_tokenizer,
+)
 from liefs.naive_engine import NaiveEngine
 from liefs.paged_engine import PagedEngine
 from liefs.scheduler import ContinuousBatchScheduler
 from liefs.utils import (
-    get_peak_vram_mb,
     reset_vram_stats,
+)
+from server.schemas import (
+    BatchScalePoint,
+    BenchmarkEngineResult,
+    CompletionChoice,
+    CompletionRequest,
+    CompletionResponse,
+    CompletionUsage,
+    ComputerBenchmarkRequest,
+    ComputerBenchmarkResponse,
+    ModelLoadRequest,
+    ModelLoadResponse,
 )
 
 # Global runtime state
@@ -218,7 +217,7 @@ async def load_custom_model(request: ModelLoadRequest):
             metadata=meta.to_dict(),
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to load model {request.model_name}: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Failed to load model {request.model_name}: {e!s}")
 
 
 @app.post("/v1/models/unload")

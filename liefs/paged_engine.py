@@ -11,7 +11,6 @@ from liefs.utils import (
     compute_generation_metrics,
     cuda_timer,
     get_eos_token_ids,
-    get_peak_vram_mb,
     reset_vram_stats,
 )
 
@@ -37,12 +36,17 @@ class PagedEngine:
         hidden_size = getattr(config, 'hidden_size', getattr(config, 'n_embd', 1024))
         self.head_dim = getattr(config, 'head_dim', hidden_size // num_attn_heads if num_attn_heads > 0 else 64)
 
+        dtype = next(model.parameters()).dtype
+        device = "cuda" if next(model.parameters()).is_cuda else "cpu"
+
         self.allocator = BlockAllocator(
             num_blocks=max_num_blocks,
             block_size=block_size,
             num_layers=self.num_layers,
             num_kv_heads=self.num_kv_heads,
             head_dim=self.head_dim,
+            dtype=dtype,
+            device=device,
         )
 
         self.eos_token_ids = get_eos_token_ids(tokenizer)

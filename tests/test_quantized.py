@@ -5,21 +5,29 @@ Correctness tests for Stage 5: INT8 Quantization.
 import pytest
 import torch
 
-from liefs.model_loader import load_model_and_tokenizer, format_chat_prompt
-from liefs.quantization import quantize_model, QuantizedLinear
 from liefs.kv_cache_engine import KVCacheEngine
+from liefs.model_loader import format_chat_prompt, load_model_and_tokenizer
+from liefs.quantization import QuantizedLinear, quantize_model
 
 
 @pytest.fixture(scope="module")
 def loaded_components():
     """Load model, record original VRAM, quantize, and return engine + stats."""
     model, tokenizer = load_model_and_tokenizer()
-    torch.cuda.synchronize()
-    vram_before = torch.cuda.memory_allocated() / (1024 * 1024)
+
+    if torch.cuda.is_available():
+        torch.cuda.synchronize()
+        vram_before = torch.cuda.memory_allocated() / (1024 * 1024)
+    else:
+        vram_before = 0.0
 
     quantize_model(model)
-    torch.cuda.synchronize()
-    vram_after = torch.cuda.memory_allocated() / (1024 * 1024)
+
+    if torch.cuda.is_available():
+        torch.cuda.synchronize()
+        vram_after = torch.cuda.memory_allocated() / (1024 * 1024)
+    else:
+        vram_after = 0.0
 
     engine = KVCacheEngine(model, tokenizer)
     return {
@@ -34,6 +42,8 @@ def loaded_components():
 class TestQuantization:
     def test_quantization_reduces_memory(self, loaded_components):
         """VRAM usage should decrease after INT8 weight quantization."""
+        if not torch.cuda.is_available():
+            pytest.skip("Test requires CUDA to measure VRAM.")
         vram_before = loaded_components["vram_before"]
         vram_after = loaded_components["vram_after"]
         assert vram_after < vram_before, (
