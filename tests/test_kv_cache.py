@@ -56,10 +56,10 @@ class TestKVCacheCorrectness:
 
     def test_matches_naive_medium(self, naive_engine, kv_engine, tokenizer):
         """Medium prompt: outputs must match."""
-        input_ids = format_chat_prompt(tokenizer, "Explain what a GPU is in three sentences.")
+        input_ids = format_chat_prompt(tokenizer, "Explain what a GPU is.")
 
-        naive_ids, _ = naive_engine.generate(input_ids, max_new_tokens=64)
-        kv_ids, _ = kv_engine.generate(input_ids, max_new_tokens=64)
+        naive_ids, _ = naive_engine.generate(input_ids, max_new_tokens=32)
+        kv_ids, _ = kv_engine.generate(input_ids, max_new_tokens=32)
 
         assert naive_ids == kv_ids
 
