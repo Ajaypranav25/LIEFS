@@ -7,11 +7,10 @@ and model architecture telemetry extraction.
 """
 
 import os
-import gc
 import torch
 from dataclasses import dataclass, asdict
 from typing import Optional, Any
-from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
 # Default model — lightweight, GQA, SwiGLU, RoPE, RMSNorm

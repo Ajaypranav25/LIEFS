@@ -5,7 +5,6 @@ Provides automated hardware inspection (CPU, GPU, RAM, VRAM, OS) and computes
 effective memory bandwidth and standardized computer benchmark scores.
 """
 
-import os
 import platform
 import psutil
 import torch
