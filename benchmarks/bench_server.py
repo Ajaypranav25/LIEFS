@@ -6,9 +6,9 @@ Compares single-request vs concurrent performance.
 """
 
 import asyncio
-import aiohttp
 import time
-import statistics
+
+import aiohttp
 
 # Minimal prompts to test with
 PROMPTS = [
@@ -86,7 +86,7 @@ async def main():
                 if resp.status != 200:
                     print("Server health check failed.")
                     return
-    except Exception as e:
+    except Exception:
         print("Could not connect to server. Ensure it's running with 'uvicorn server.app:app'")
         return
         

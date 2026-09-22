@@ -7,12 +7,11 @@ and model architecture telemetry extraction.
 """
 
 import os
-import gc
-import torch
-from dataclasses import dataclass, asdict
-from typing import Optional, Any
-from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig
+from dataclasses import asdict, dataclass
+from typing import Any
 
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # Default model — lightweight, GQA, SwiGLU, RoPE, RMSNorm
 DEFAULT_MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"
@@ -134,7 +133,7 @@ def load_model_and_tokenizer(
     model_name: str = DEFAULT_MODEL_NAME,
     dtype: torch.dtype | str = torch.float16,
     device: str = "auto",
-    hf_token: Optional[str] = None,
+    hf_token: str | None = None,
 ) -> tuple[AutoModelForCausalLM, AutoTokenizer]:
     """Universal model loader for any Hugging Face model or local directory.
 
@@ -147,10 +146,7 @@ def load_model_and_tokenizer(
     Returns:
         (model, tokenizer) tuple in eval mode.
     """
-    if isinstance(dtype, str):
-        target_dtype = resolve_dtype(dtype)
-    else:
-        target_dtype = dtype
+    target_dtype = resolve_dtype(dtype) if isinstance(dtype, str) else dtype
 
     target_device = resolve_device(device)
 
@@ -286,9 +282,6 @@ def format_chat_prompt(
         fallback_text = f"System: {system_message}\nUser: {user_message}\nAssistant:"
         input_ids = tokenizer.encode(fallback_text, return_tensors="pt")
 
-    if isinstance(device, str):
-        target_dev = resolve_device(device)
-    else:
-        target_dev = device
+    target_dev = resolve_device(device) if isinstance(device, str) else device
 
     return input_ids.to(target_dev)

@@ -1,8 +1,9 @@
 """
 Quantized Generation Engine for LIEFS.
 """
-from liefs.quantization import quantize_model
 from liefs.kv_cache_engine import KVCacheEngine
+from liefs.quantization import quantize_model
+
 
 def create_quantized_engine(model, tokenizer):
     """

@@ -13,28 +13,26 @@ Usage:
 
 import argparse
 import json
-import os
-import sys
 import time
+
 import torch
 
 from liefs.hardware_profiler import (
-    get_hardware_profile,
-    calculate_effective_memory_bandwidth,
     calculate_computer_score,
-)
-from liefs.model_loader import (
-    load_model_and_tokenizer,
-    get_model_metadata,
-    format_chat_prompt,
-    DEFAULT_MODEL_NAME,
+    calculate_effective_memory_bandwidth,
+    get_hardware_profile,
 )
 from liefs.kv_cache_engine import KVCacheEngine
+from liefs.model_loader import (
+    DEFAULT_MODEL_NAME,
+    format_chat_prompt,
+    get_model_metadata,
+    load_model_and_tokenizer,
+)
 from liefs.naive_engine import NaiveEngine
 from liefs.paged_engine import PagedEngine
-from liefs.quantized_engine import create_quantized_engine
 from liefs.scheduler import ContinuousBatchScheduler
-from liefs.utils import reset_vram_stats, get_peak_vram_mb
+from liefs.utils import reset_vram_stats
 
 
 def print_banner():
@@ -155,7 +153,7 @@ def run_benchmark(
         print("  Testing Stage 4: Paged Attention Pool...")
         torch.cuda.empty_cache() if torch.cuda.is_available() else None
         reset_vram_stats()
-        gen_ids, m_paged = paged_engine.generate(input_ids, max_new_tokens=max_tokens)
+        _gen_ids, m_paged = paged_engine.generate(input_ids, max_new_tokens=max_tokens)
         bw_paged = calculate_effective_memory_bandwidth(meta.memory_footprint_mb, m_paged.tokens_per_sec)
         results.append({
             "engine": "paged",

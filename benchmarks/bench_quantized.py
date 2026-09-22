@@ -8,14 +8,14 @@ Usage:
 """
 
 import statistics
+
 import torch
 
-from liefs.model_loader import load_model_and_tokenizer, format_chat_prompt
+from benchmarks.prompts import BENCHMARK_PROMPTS
 from liefs.kv_cache_engine import KVCacheEngine
+from liefs.model_loader import format_chat_prompt, load_model_and_tokenizer
 from liefs.quantization import quantize_model
 from liefs.utils import GenerationMetrics
-from benchmarks.prompts import BENCHMARK_PROMPTS
-
 
 NUM_RUNS = 3
 

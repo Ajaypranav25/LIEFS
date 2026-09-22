@@ -44,7 +44,6 @@ from liefs.utils import (
     compute_generation_metrics,
     cuda_timer,
     get_eos_token_ids,
-    get_peak_vram_mb,
     reset_vram_stats,
 )
 

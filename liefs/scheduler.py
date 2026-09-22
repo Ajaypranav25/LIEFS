@@ -18,7 +18,6 @@ import uuid
 from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Optional
 
 import torch
 
@@ -44,7 +43,7 @@ class GenerationRequest:
     # Populated during generation
     generated_ids: list[int] = field(default_factory=list)
     kv_cache: object = None           # DynamicCache or tuple of (K, V)
-    current_logits: Optional[torch.Tensor] = None  # (1, vocab_size)
+    current_logits: torch.Tensor | None = None  # (1, vocab_size)
     finish_reason: str = ""           # "stop" (EOS) or "length" (max tokens)
 
     # Timing

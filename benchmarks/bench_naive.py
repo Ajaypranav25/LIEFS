@@ -9,22 +9,19 @@ Usage:
     python -m benchmarks.bench_naive
 """
 
-import sys
 import statistics
 
 import torch
 
-from liefs.model_loader import load_model_and_tokenizer, format_chat_prompt
+from benchmarks.prompts import BENCHMARK_PROMPTS
+from liefs.model_loader import format_chat_prompt, load_model_and_tokenizer
 from liefs.naive_engine import NaiveEngine
 from liefs.utils import (
     GenerationMetrics,
-    print_metrics,
     cuda_timer,
-    reset_vram_stats,
     get_peak_vram_mb,
+    reset_vram_stats,
 )
-from benchmarks.prompts import BENCHMARK_PROMPTS
-
 
 NUM_RUNS = 3  # Runs per prompt for mean ± std
 
@@ -94,11 +91,10 @@ def benchmark_hf_generate(model, tokenizer) -> dict[str, list[GenerationMetrics]
             torch.cuda.empty_cache()
             reset_vram_stats()
 
-            with cuda_timer() as elapsed:
-                with torch.no_grad():
-                    output_ids = model.generate(
-                        input_ids, max_new_tokens=max_tokens, do_sample=False
-                    )
+            with cuda_timer() as elapsed, torch.no_grad():
+                output_ids = model.generate(
+                    input_ids, max_new_tokens=max_tokens, do_sample=False
+                )
 
             total_time = elapsed()
             num_generated = output_ids.shape[1] - prompt_len
@@ -155,7 +151,7 @@ def print_summary(
             naive_mean_tps = statistics.mean(tps)
             speedup = hf_mean_tps / naive_mean_tps if naive_mean_tps > 0 else float("inf")
 
-            print(f"    --- HF generate ---")
+            print("    --- HF generate ---")
             print(f"    HF Throughput    : {hf_mean_tps:>8.2f} tok/s  ({speedup:.1f}x faster)")
             print(f"    HF Peak VRAM     : {statistics.mean(hf_vrams):>8.2f} MB")
 

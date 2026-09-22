@@ -5,9 +5,9 @@ Correctness tests for Stage 5: INT8 Quantization.
 import pytest
 import torch
 
-from liefs.model_loader import load_model_and_tokenizer, format_chat_prompt
-from liefs.quantization import quantize_model, QuantizedLinear
 from liefs.kv_cache_engine import KVCacheEngine
+from liefs.model_loader import format_chat_prompt, load_model_and_tokenizer
+from liefs.quantization import QuantizedLinear, quantize_model
 
 
 @pytest.fixture(scope="module")
