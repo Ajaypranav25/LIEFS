@@ -12,12 +12,11 @@ import statistics
 
 import torch
 
-from liefs.model_loader import load_model_and_tokenizer, format_chat_prompt
-from liefs.naive_engine import NaiveEngine
-from liefs.kv_cache_engine import KVCacheEngine
-from liefs.utils import GenerationMetrics
 from benchmarks.prompts import BENCHMARK_PROMPTS
-
+from liefs.kv_cache_engine import KVCacheEngine
+from liefs.model_loader import format_chat_prompt, load_model_and_tokenizer
+from liefs.naive_engine import NaiveEngine
+from liefs.utils import GenerationMetrics
 
 NUM_RUNS = 3
 
@@ -60,9 +59,8 @@ def print_comparison(
     print("STAGE 2 BENCHMARK — KV-CACHE vs NAIVE BASELINE")
     print("=" * 90)
 
-    for name in kv_results:
-        kv_list = kv_results[name]
-        naive_list = naive_results[name]
+    for name, kv_list in kv_results.items():
+        naive_list = naive_results.get(name, [])
 
         kv_tps = statistics.mean([m.tokens_per_sec for m in kv_list])
         naive_tps = statistics.mean([m.tokens_per_sec for m in naive_list])

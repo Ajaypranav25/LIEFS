@@ -7,11 +7,10 @@ all basic correctness properties hold.
 """
 
 import pytest
-import torch
 
-from liefs.model_loader import load_model_and_tokenizer, format_chat_prompt
-from liefs.naive_engine import NaiveEngine
 from liefs.kv_cache_engine import KVCacheEngine
+from liefs.model_loader import format_chat_prompt, load_model_and_tokenizer
+from liefs.naive_engine import NaiveEngine
 
 
 @pytest.fixture(scope="module")
@@ -77,7 +76,7 @@ class TestKVCacheDeterminism:
 class TestKVCacheEOS:
     def test_stops_at_eos(self, kv_engine, tokenizer):
         input_ids = format_chat_prompt(tokenizer, "What is 2+2?")
-        generated_ids, metrics = kv_engine.generate(input_ids, max_new_tokens=256)
+        _generated_ids, metrics = kv_engine.generate(input_ids, max_new_tokens=256)
 
         assert metrics.total_tokens_generated < 256
         assert metrics.total_tokens_generated > 0

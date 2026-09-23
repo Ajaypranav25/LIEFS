@@ -8,14 +8,14 @@ Usage:
 """
 
 import statistics
+
 import torch
 
-from liefs.model_loader import load_model_and_tokenizer, format_chat_prompt
-from liefs.kv_cache_engine import KVCacheEngine
-from liefs.paged_engine import PagedEngine
-from liefs.utils import GenerationMetrics, reset_vram_stats, get_peak_vram_mb
 from benchmarks.prompts import BENCHMARK_PROMPTS
-
+from liefs.kv_cache_engine import KVCacheEngine
+from liefs.model_loader import format_chat_prompt, load_model_and_tokenizer
+from liefs.paged_engine import PagedEngine
+from liefs.utils import GenerationMetrics
 
 NUM_RUNS = 3
 
@@ -87,7 +87,7 @@ def main():
         print(f"    {'Peak VRAM (MB)':<20} {kv_vram:>12.2f} {paged_vram:>12.2f}")
 
     # Memory utilization report
-    print(f"\n  Block allocator utilization after benchmark:")
+    print("\n  Block allocator utilization after benchmark:")
     print(f"    Free blocks: {paged_engine.allocator.num_free_blocks}/{paged_engine.allocator.num_blocks}")
     print(f"    Utilization: {paged_engine.allocator.utilization:.1%}")
 

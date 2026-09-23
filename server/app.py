@@ -15,42 +15,43 @@ import gc
 import json
 import time
 import uuid
-import torch
 from contextlib import asynccontextmanager
+
+import torch
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
-from server.schemas import (
-    CompletionRequest,
-    CompletionResponse,
-    CompletionChoice,
-    CompletionUsage,
-    BenchmarkEngineResult,
-    ModelLoadRequest,
-    ModelLoadResponse,
-    ComputerBenchmarkRequest,
-    ComputerBenchmarkResponse,
-    BatchScalePoint,
-)
-from liefs.model_loader import (
-    load_model_and_tokenizer,
-    get_model_metadata,
-    format_chat_prompt,
-    DEFAULT_MODEL_NAME,
-    POPULAR_MODEL_PRESETS,
-)
 from liefs.hardware_profiler import (
-    get_hardware_profile,
-    calculate_effective_memory_bandwidth,
     calculate_computer_score,
+    calculate_effective_memory_bandwidth,
+    get_hardware_profile,
 )
 from liefs.kv_cache_engine import KVCacheEngine
+from liefs.model_loader import (
+    DEFAULT_MODEL_NAME,
+    POPULAR_MODEL_PRESETS,
+    format_chat_prompt,
+    get_model_metadata,
+    load_model_and_tokenizer,
+)
 from liefs.naive_engine import NaiveEngine
 from liefs.paged_engine import PagedEngine
 from liefs.scheduler import ContinuousBatchScheduler
 from liefs.utils import (
     reset_vram_stats,
+)
+from server.schemas import (
+    BatchScalePoint,
+    BenchmarkEngineResult,
+    CompletionChoice,
+    CompletionRequest,
+    CompletionResponse,
+    CompletionUsage,
+    ComputerBenchmarkRequest,
+    ComputerBenchmarkResponse,
+    ModelLoadRequest,
+    ModelLoadResponse,
 )
 
 # Global runtime state
@@ -102,7 +103,7 @@ def instantiate_engines(model_name: str, precision: str = "float16", device: str
     naive_engine = NaiveEngine(model, tokenizer)
     try:
         paged_engine = PagedEngine(model, tokenizer, block_size=16, max_num_blocks=256)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"Paged engine notice: {e}")
         paged_engine = None
 
@@ -124,7 +125,7 @@ async def lifespan(app: FastAPI):
     
     try:
         instantiate_engines(DEFAULT_MODEL_NAME)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"Warning on startup model load: {e}")
         
     yield
@@ -215,8 +216,8 @@ async def load_custom_model(request: ModelLoadRequest):
             model_name=request.model_name,
             metadata=meta.to_dict(),
         )
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to load model {request.model_name}: {str(e)}")
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=400, detail=f"Failed to load model {request.model_name}: {e!s}")
 
 
 @app.post("/v1/models/unload")
@@ -374,7 +375,7 @@ async def create_completion(request: CompletionRequest):
                         }
                         yield f"data: {json.dumps(chunk)}\n\n"
                         await asyncio.sleep(0.001)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 err_chunk = {"error": str(e)}
                 yield f"data: {json.dumps(err_chunk)}\n\n"
                 yield "data: [DONE]\n\n"
@@ -395,7 +396,7 @@ async def create_completion(request: CompletionRequest):
             prompt_tensor,
             max_new_tokens=request.max_tokens
         )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=str(e))
 
     generated_text = tokenizer.decode(generated_ids, skip_special_tokens=True)
