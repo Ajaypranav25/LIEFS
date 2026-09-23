@@ -5,8 +5,8 @@ INT8 Quantization Module for LIEFS.
 import gc
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
+from torch import nn
 
 
 class QuantizedLinear(nn.Module):

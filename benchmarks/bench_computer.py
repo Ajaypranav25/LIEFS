@@ -13,28 +13,26 @@ Usage:
 
 import argparse
 import json
-import os
-import sys
 import time
+
 import torch
 
 from liefs.hardware_profiler import (
-    get_hardware_profile,
-    calculate_effective_memory_bandwidth,
     calculate_computer_score,
-)
-from liefs.model_loader import (
-    load_model_and_tokenizer,
-    get_model_metadata,
-    format_chat_prompt,
-    DEFAULT_MODEL_NAME,
+    calculate_effective_memory_bandwidth,
+    get_hardware_profile,
 )
 from liefs.kv_cache_engine import KVCacheEngine
+from liefs.model_loader import (
+    DEFAULT_MODEL_NAME,
+    format_chat_prompt,
+    get_model_metadata,
+    load_model_and_tokenizer,
+)
 from liefs.naive_engine import NaiveEngine
 from liefs.paged_engine import PagedEngine
-from liefs.quantized_engine import create_quantized_engine
 from liefs.scheduler import ContinuousBatchScheduler
-from liefs.utils import reset_vram_stats, get_peak_vram_mb
+from liefs.utils import reset_vram_stats
 
 
 def print_banner():
@@ -93,7 +91,7 @@ def run_benchmark(
     naive_engine = NaiveEngine(model, tokenizer)
     try:
         paged_engine = PagedEngine(model, tokenizer, block_size=16, max_num_blocks=256)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"  Paged Engine initialization notice: {e}")
         paged_engine = None
 
@@ -116,7 +114,7 @@ def run_benchmark(
     print("  Testing Stage 2: KV-Cache Engine...")
     torch.cuda.empty_cache() if torch.cuda.is_available() else None
     reset_vram_stats()
-    gen_ids, m_kv = kv_engine.generate(input_ids, max_new_tokens=max_tokens)
+    _gen_ids, m_kv = kv_engine.generate(input_ids, max_new_tokens=max_tokens)
     bw_kv = calculate_effective_memory_bandwidth(meta.memory_footprint_mb, m_kv.tokens_per_sec)
     results.append({
         "engine": "kv_cache",
@@ -134,7 +132,7 @@ def run_benchmark(
     print("  Testing Stage 1: Naive Full-Recomputation Baseline...")
     torch.cuda.empty_cache() if torch.cuda.is_available() else None
     reset_vram_stats()
-    gen_ids, m_naive = naive_engine.generate(input_ids, max_new_tokens=max_tokens)
+    _gen_ids, m_naive = naive_engine.generate(input_ids, max_new_tokens=max_tokens)
     bw_naive = calculate_effective_memory_bandwidth(meta.memory_footprint_mb, m_naive.tokens_per_sec)
     speedup_kv = round(m_naive.total_time_ms / max(1.0, m_kv.total_time_ms), 2)
     results[0]["speedup"] = speedup_kv
@@ -155,7 +153,7 @@ def run_benchmark(
         print("  Testing Stage 4: Paged Attention Pool...")
         torch.cuda.empty_cache() if torch.cuda.is_available() else None
         reset_vram_stats()
-        gen_ids, m_paged = paged_engine.generate(input_ids, max_new_tokens=max_tokens)
+        _gen_ids, m_paged = paged_engine.generate(input_ids, max_new_tokens=max_tokens)
         bw_paged = calculate_effective_memory_bandwidth(meta.memory_footprint_mb, m_paged.tokens_per_sec)
         results.append({
             "engine": "paged",

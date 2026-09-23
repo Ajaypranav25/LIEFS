@@ -12,9 +12,8 @@ Usage:
 import pytest
 import torch
 
-from liefs.model_loader import load_model_and_tokenizer, format_chat_prompt
+from liefs.model_loader import format_chat_prompt, load_model_and_tokenizer
 from liefs.naive_engine import NaiveEngine
-
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 # We use module-scoped fixtures so the model is loaded once for all tests,
@@ -67,7 +66,7 @@ class TestEOS:
         """Short answers should stop before max_new_tokens."""
         input_ids = format_chat_prompt(tokenizer, "What is 2+2?")
 
-        generated_ids, metrics = engine.generate(input_ids, max_new_tokens=256)
+        _generated_ids, metrics = engine.generate(input_ids, max_new_tokens=256)
 
         # A simple math answer should NOT use all 256 tokens
         assert metrics.total_tokens_generated < 256, (
@@ -119,7 +118,7 @@ class TestMaxTokens:
             tokenizer, "Write a very long essay about the history of computing."
         )
 
-        generated_ids, metrics = engine.generate(input_ids, max_new_tokens=max_tokens)
+        generated_ids, _metrics = engine.generate(input_ids, max_new_tokens=max_tokens)
 
         assert len(generated_ids) <= max_tokens, (
             f"Generated {len(generated_ids)} tokens, max was {max_tokens}"
@@ -129,7 +128,7 @@ class TestMaxTokens:
         """Should work with max_new_tokens=1."""
         input_ids = format_chat_prompt(tokenizer, "Hi")
 
-        generated_ids, metrics = engine.generate(input_ids, max_new_tokens=1)
+        generated_ids, _metrics = engine.generate(input_ids, max_new_tokens=1)
 
         assert len(generated_ids) <= 1
 

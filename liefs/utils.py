@@ -8,6 +8,7 @@ and multi-architecture EOS token resolution.
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass
+
 import torch
 
 
@@ -95,7 +96,7 @@ def get_eos_token_ids(tokenizer) -> set[int]:
             token_id = tokenizer.convert_tokens_to_ids(stop_str)
             if isinstance(token_id, int) and token_id != tokenizer.unk_token_id and token_id > 0:
                 eos_ids.add(token_id)
-        except Exception:
+        except Exception:  # noqa: BLE001, S110
             pass
 
     return eos_ids

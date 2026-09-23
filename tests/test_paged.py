@@ -3,12 +3,11 @@ Correctness tests for Stage 4: Paged attention.
 """
 
 import pytest
-import torch
 
-from liefs.model_loader import load_model_and_tokenizer, format_chat_prompt
 from liefs.kv_cache_engine import KVCacheEngine
+from liefs.model_loader import format_chat_prompt, load_model_and_tokenizer
+from liefs.paged_attention import BlockAllocator
 from liefs.paged_engine import PagedEngine
-from liefs.paged_attention import BlockAllocator, PagedKVCache
 
 
 @pytest.fixture(scope="module")
@@ -70,7 +69,7 @@ class TestBlockAllocator:
         b1 = allocator.allocate()
         assert allocator.num_free_blocks == 3
 
-        b2 = allocator.allocate()
+        allocator.allocate()
         assert allocator.num_free_blocks == 2
 
         allocator.free(b1)

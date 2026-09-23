@@ -6,9 +6,9 @@ Compares single-request vs concurrent performance.
 """
 
 import asyncio
-import aiohttp
 import time
-import statistics
+
+import aiohttp
 
 # Minimal prompts to test with
 PROMPTS = [
@@ -34,7 +34,7 @@ async def send_request(session, prompt):
             res = await response.json()
             latency = time.time() - start
             return {"latency": latency, "status": response.status, "data": res}
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         return {"latency": time.time() - start, "status": 500, "error": str(e)}
 
 async def run_batch(concurrency, num_requests=10):
@@ -81,12 +81,11 @@ async def run_batch(concurrency, num_requests=10):
 async def main():
     print("Checking if server is running...")
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get("http://127.0.0.1:8000/health") as resp:
-                if resp.status != 200:
-                    print("Server health check failed.")
-                    return
-    except Exception as e:
+        async with aiohttp.ClientSession() as session, session.get("http://127.0.0.1:8000/health") as resp:
+            if resp.status != 200:
+                print("Server health check failed.")
+                return
+    except Exception:  # noqa: BLE001
         print("Could not connect to server. Ensure it's running with 'uvicorn server.app:app'")
         return
         

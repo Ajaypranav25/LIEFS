@@ -10,22 +10,21 @@ Usage:
 """
 
 import time
-import statistics
 
 import torch
 
-from liefs.model_loader import load_model_and_tokenizer, format_chat_prompt
-from liefs.scheduler import ContinuousBatchScheduler
-from liefs.kv_cache_engine import KVCacheEngine
-from liefs.utils import cuda_timer, reset_vram_stats, get_peak_vram_mb
 from benchmarks.prompts import BENCHMARK_PROMPTS
+from liefs.kv_cache_engine import KVCacheEngine
+from liefs.model_loader import format_chat_prompt, load_model_and_tokenizer
+from liefs.scheduler import ContinuousBatchScheduler
+from liefs.utils import get_peak_vram_mb, reset_vram_stats
 
 
 def generate_workload(tokenizer, n_requests: int = 8) -> list[tuple[torch.Tensor, int]]:
     """Create a workload of n_requests by cycling through benchmark prompts."""
     workload = []
     for i in range(n_requests):
-        name, user_msg, max_tokens = BENCHMARK_PROMPTS[i % len(BENCHMARK_PROMPTS)]
+        _name, user_msg, max_tokens = BENCHMARK_PROMPTS[i % len(BENCHMARK_PROMPTS)]
         input_ids = format_chat_prompt(tokenizer, user_msg)
         workload.append((input_ids, max_tokens))
     return workload

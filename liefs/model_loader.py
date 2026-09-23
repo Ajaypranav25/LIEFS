@@ -7,11 +7,11 @@ and model architecture telemetry extraction.
 """
 
 import os
-import torch
-from dataclasses import dataclass, asdict
-from typing import Optional, Any
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from dataclasses import asdict, dataclass
+from typing import Any
 
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # Default model — lightweight, GQA, SwiGLU, RoPE, RMSNorm
 DEFAULT_MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"
@@ -133,7 +133,7 @@ def load_model_and_tokenizer(
     model_name: str = DEFAULT_MODEL_NAME,
     dtype: torch.dtype | str = torch.float16,
     device: str = "auto",
-    hf_token: Optional[str] = None,
+    hf_token: str | None = None,
 ) -> tuple[AutoModelForCausalLM, AutoTokenizer]:
     """Universal model loader for any Hugging Face model or local directory.
 
@@ -280,7 +280,7 @@ def format_chat_prompt(
             return_tensors="pt",
             return_dict=False,
         )
-    except Exception:
+    except Exception:  # noqa: BLE001
         # Fallback for tokenizers without chat templates or with syntax incompatibilities
         fallback_text = f"System: {system_message}\nUser: {user_message}\nAssistant:"
         input_ids = tokenizer.encode(fallback_text, return_tensors="pt")

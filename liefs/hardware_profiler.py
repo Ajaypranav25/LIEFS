@@ -6,10 +6,10 @@ effective memory bandwidth and standardized computer benchmark scores.
 """
 
 import platform
+from dataclasses import asdict, dataclass
+
 import psutil
 import torch
-from dataclasses import dataclass, asdict
-from typing import Optional
 
 
 @dataclass
@@ -26,7 +26,7 @@ class HardwareProfile:
     cpu_model: str
     cpu_physical_cores: int
     cpu_logical_cores: int
-    cpu_freq_mhz: Optional[float]
+    cpu_freq_mhz: float | None
     ram_total_gb: float
     ram_available_gb: float
     ram_usage_percent: float
@@ -35,14 +35,14 @@ class HardwareProfile:
     cuda_available: bool
     gpu_count: int
     gpu_name: str
-    gpu_compute_capability: Optional[str]
+    gpu_compute_capability: str | None
     vram_total_mb: float
     vram_free_mb: float
     vram_allocated_mb: float
     vram_reserved_mb: float
     vram_usage_percent: float
-    driver_version: Optional[str] = None
-    cuda_version: Optional[str] = None
+    driver_version: str | None = None
+    cuda_version: str | None = None
     
     def to_dict(self) -> dict:
         return asdict(self)
@@ -65,7 +65,7 @@ def get_cpu_name() -> str:
                 for line in f:
                     if "model name" in line:
                         return line.split(":")[1].strip()
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
     return platform.processor() or "Unknown CPU"
 
@@ -188,7 +188,7 @@ def calculate_computer_score(
     latency_pts = max(0.0, 150.0 - ttft_penalty)
     
     raw_score = throughput_pts + bandwidth_pts + latency_pts
-    final_score = int(round(raw_score))
+    final_score = round(raw_score)
     
     # Tier classifications
     if final_score >= 1200:
