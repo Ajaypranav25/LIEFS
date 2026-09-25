@@ -78,10 +78,6 @@ export const BenchmarksView: React.FC<BenchmarksViewProps> = ({
   const [batchScaling, setBatchScaling] = useState<BatchScalePoint[] | null>(null);
   const [copyStatus, setCopyStatus] = useState<boolean>(false);
 
-  useEffect(() => {
-    loadEnvironment();
-  }, []);
-
   const loadEnvironment = async () => {
     try {
       const [hw, meta] = await Promise.all([
@@ -101,6 +97,10 @@ export const BenchmarksView: React.FC<BenchmarksViewProps> = ({
       console.warn('Failed to load benchmark environment:', e);
     }
   };
+
+  useEffect(() => {
+    loadEnvironment();
+  }, []);
 
   const handleRunBenchmark = async () => {
     if (!serverOnline || isRunning) return;

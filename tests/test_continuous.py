@@ -76,7 +76,7 @@ class TestContinuousBatching:
         scheduler = ContinuousBatchScheduler(model, tok, max_batch_size=1)
 
         for i in range(3):
-            input_ids = format_chat_prompt(tok, f"Count to {i+1}.")
+            input_ids = format_chat_prompt(tok, f"Count to {i + 1}.")
             scheduler.add_request(input_ids, max_new_tokens=16)
 
         completed = scheduler.run()

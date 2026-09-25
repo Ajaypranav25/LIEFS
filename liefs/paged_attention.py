@@ -14,11 +14,12 @@ class KVBlock:
     Stores K and V tensors for up to `block_size` token positions
     across all layers.
     """
+
     block_id: int
     block_size: int
-    key_cache: torch.Tensor    # (num_layers, num_kv_heads, block_size, head_dim)
+    key_cache: torch.Tensor  # (num_layers, num_kv_heads, block_size, head_dim)
     value_cache: torch.Tensor  # (num_layers, num_kv_heads, block_size, head_dim)
-    num_filled: int = 0        # How many positions are filled for this block
+    num_filled: int = 0  # How many positions are filled for this block
 
     @property
     def is_full(self) -> bool:
@@ -63,12 +64,20 @@ class BlockAllocator:
                 block_id=i,
                 block_size=block_size,
                 key_cache=torch.zeros(
-                    num_layers, num_kv_heads, block_size, head_dim,
-                    device=self.device, dtype=dtype,
+                    num_layers,
+                    num_kv_heads,
+                    block_size,
+                    head_dim,
+                    device=self.device,
+                    dtype=dtype,
                 ),
                 value_cache=torch.zeros(
-                    num_layers, num_kv_heads, block_size, head_dim,
-                    device=self.device, dtype=dtype,
+                    num_layers,
+                    num_kv_heads,
+                    block_size,
+                    head_dim,
+                    device=self.device,
+                    dtype=dtype,
                 ),
             )
             self.blocks.append(block)
@@ -121,7 +130,7 @@ class PagedKVCache:
     def append_kv(
         self,
         layer_idx: int,
-        key: torch.Tensor,    # (1, num_kv_heads, new_tokens, head_dim)
+        key: torch.Tensor,  # (1, num_kv_heads, new_tokens, head_dim)
         value: torch.Tensor,  # (1, num_kv_heads, new_tokens, head_dim)
     ):
         """Append K/V tensors for new tokens into the paged blocks."""
@@ -147,7 +156,9 @@ class PagedKVCache:
 
         min_toks = min(self.tokens_per_layer)
         for i, b in enumerate(self.block_table):
-            filled_in_block = max(0, min(self.block_size, min_toks - i * self.block_size))
+            filled_in_block = max(
+                0, min(self.block_size, min_toks - i * self.block_size)
+            )
             b.num_filled = filled_in_block
 
     def get_kv(self, layer_idx: int) -> tuple[torch.Tensor | None, torch.Tensor | None]:
@@ -171,7 +182,9 @@ class PagedKVCache:
         if not keys:
             return None, None
 
-        all_keys = torch.cat(keys, dim=1).unsqueeze(0)    # (1, num_kv_heads, total, head_dim)
+        all_keys = torch.cat(keys, dim=1).unsqueeze(
+            0
+        )  # (1, num_kv_heads, total, head_dim)
         all_values = torch.cat(values, dim=1).unsqueeze(0)
 
         return all_keys, all_values

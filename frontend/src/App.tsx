@@ -105,7 +105,7 @@ const AppContent: React.FC = () => {
     };
 
     syncUserSessions();
-  }, [user?.id]);
+  }, [user?.id, activeSessionId]);
 
   // Sync sessions to localStorage
   useEffect(() => {

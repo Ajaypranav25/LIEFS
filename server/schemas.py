@@ -2,16 +2,20 @@
 Pydantic schemas for the LIEFS Universal LLM & Computer Benchmarking Server.
 """
 
-
 from pydantic import BaseModel, Field
 
 
 class CompletionRequest(BaseModel):
-    prompt: str = Field(..., max_length=100000, description="Input prompt text (max 100k chars)")
+    prompt: str = Field(
+        ..., max_length=100000, description="Input prompt text (max 100k chars)"
+    )
     max_tokens: int = Field(default=128, ge=1, le=2048)
     temperature: float = Field(default=0.0, ge=0.0, le=2.0)  # 0.0 = greedy
     stream: bool = False
-    engine: str = Field(default="kv_cache", description="Inference engine: kv_cache, naive, quantized, paged")
+    engine: str = Field(
+        default="kv_cache",
+        description="Inference engine: kv_cache, naive, quantized, paged",
+    )
 
 
 class CompletionChoice(BaseModel):
@@ -28,7 +32,7 @@ class CompletionUsage(BaseModel):
 
 class CompletionResponse(BaseModel):
     id: str
-    object: str = 'text_completion'
+    object: str = "text_completion"
     created: int
     model: str
     choices: list[CompletionChoice]
@@ -52,7 +56,9 @@ class ModelLoadResponse(BaseModel):
 
 
 class BenchmarkRunRequest(BaseModel):
-    prompt: str = Field(default="Explain how a transformer model works step by step.", max_length=50000)
+    prompt: str = Field(
+        default="Explain how a transformer model works step by step.", max_length=50000
+    )
     max_tokens: int = Field(default=128, ge=1, le=2048)
     engines: list[str] = ["naive", "kv_cache", "paged"]
 
@@ -73,7 +79,10 @@ class BenchmarkEngineResult(BaseModel):
 
 
 class ComputerBenchmarkRequest(BaseModel):
-    prompt: str = Field(default="Explain how transformer self-attention works step by step in plain terms.", max_length=50000)
+    prompt: str = Field(
+        default="Explain how transformer self-attention works step by step in plain terms.",
+        max_length=50000,
+    )
     max_tokens: int = Field(default=128, ge=1, le=2048)
     engines: list[str] = ["naive", "kv_cache", "paged"]
     include_batch_scaling: bool = True

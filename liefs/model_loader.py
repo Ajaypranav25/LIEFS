@@ -26,7 +26,7 @@ POPULAR_MODEL_PRESETS = [
         "params_m": 494,
         "recommended_vram_mb": 1200,
         "description": "24 Layers, GQA with 2 KV heads, SwiGLU MLP. Highly optimized baseline for laptops and entry GPUs.",
-        "badge": "Default"
+        "badge": "Default",
     },
     {
         "id": "HuggingFaceTB/SmolLM2-360M-Instruct",
@@ -36,7 +36,7 @@ POPULAR_MODEL_PRESETS = [
         "params_m": 360,
         "recommended_vram_mb": 900,
         "description": "Ultra-lightweight high-speed model. Great for quick sanity checks and CPU benchmarking.",
-        "badge": "Ultra Fast"
+        "badge": "Ultra Fast",
     },
     {
         "id": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
@@ -46,7 +46,7 @@ POPULAR_MODEL_PRESETS = [
         "params_m": 1100,
         "recommended_vram_mb": 2400,
         "description": "Classic Llama architecture with 22 layers, 32 Q heads, 4 KV heads. Standard open benchmark.",
-        "badge": "Popular"
+        "badge": "Popular",
     },
     {
         "id": "Qwen/Qwen2.5-1.5B-Instruct",
@@ -56,7 +56,7 @@ POPULAR_MODEL_PRESETS = [
         "params_m": 1540,
         "recommended_vram_mb": 3500,
         "description": "28 Layers, 12 Q heads, 2 KV heads. Excellent balance of inference speed and reasoning capability.",
-        "badge": "Mid-Weight"
+        "badge": "Mid-Weight",
     },
     {
         "id": "meta-llama/Llama-3.2-1B-Instruct",
@@ -66,7 +66,7 @@ POPULAR_MODEL_PRESETS = [
         "params_m": 1235,
         "recommended_vram_mb": 2800,
         "description": "Meta's lightweight model with 128k context support, GQA, and RoPE scaling.",
-        "badge": "Meta Llama"
+        "badge": "Meta Llama",
     },
     {
         "id": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
@@ -76,7 +76,7 @@ POPULAR_MODEL_PRESETS = [
         "params_m": 1540,
         "recommended_vram_mb": 3500,
         "description": "Reasoning-distilled model trained on chain-of-thought traces. High compute density.",
-        "badge": "Reasoning"
+        "badge": "Reasoning",
     },
 ]
 
@@ -84,6 +84,7 @@ POPULAR_MODEL_PRESETS = [
 @dataclass
 class ModelArchitectureMetadata:
     """Detailed structural metadata of a loaded model."""
+
     model_name: str
     parameter_count: int
     parameter_count_m: float
@@ -112,7 +113,11 @@ def resolve_dtype(dtype_str: str = "float16") -> torch.dtype:
     if d in ("float16", "fp16"):
         return torch.float16
     elif d in ("bfloat16", "bf16"):
-        return torch.bfloat16 if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else torch.float16
+        return (
+            torch.bfloat16
+            if torch.cuda.is_available() and torch.cuda.is_bf16_supported()
+            else torch.float16
+        )
     elif d in ("float32", "fp32"):
         return torch.float32
     return torch.float16
@@ -179,14 +184,13 @@ def load_model_and_tokenizer(
     else:
         load_kwargs["device_map"] = "cpu"
 
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name,
-        **load_kwargs
-    )
+    model = AutoModelForCausalLM.from_pretrained(model_name, **load_kwargs)
     model.eval()
 
     param_count = sum(p.numel() for p in model.parameters())
-    print(f"  Loaded successfully! Parameters: {param_count:,} ({param_count / 1e6:.1f}M)")
+    print(
+        f"  Loaded successfully! Parameters: {param_count:,} ({param_count / 1e6:.1f}M)"
+    )
 
     if target_device == "cuda" and torch.cuda.is_available():
         vram_mb = torch.cuda.memory_allocated() / (1024 * 1024)
@@ -209,10 +213,16 @@ def get_model_metadata(
     num_layers = getattr(config, "num_hidden_layers", getattr(config, "n_layer", 24))
     hidden_size = getattr(config, "hidden_size", getattr(config, "n_embd", 1024))
     num_heads = getattr(config, "num_attention_heads", getattr(config, "n_head", 16))
-    num_kv_heads = getattr(config, "num_key_value_heads", getattr(config, "num_attention_heads", num_heads))
-    head_dim = getattr(config, "head_dim", hidden_size // num_heads if num_heads > 0 else 64)
+    num_kv_heads = getattr(
+        config, "num_key_value_heads", getattr(config, "num_attention_heads", num_heads)
+    )
+    head_dim = getattr(
+        config, "head_dim", hidden_size // num_heads if num_heads > 0 else 64
+    )
     vocab_size = getattr(config, "vocab_size", len(tokenizer))
-    max_pos = getattr(config, "max_position_embeddings", getattr(config, "max_sequence_length", 4096))
+    max_pos = getattr(
+        config, "max_position_embeddings", getattr(config, "max_sequence_length", 4096)
+    )
     archs = getattr(config, "architectures", ["CausalLM"])
 
     # Memory calculations

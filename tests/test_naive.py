@@ -19,6 +19,7 @@ from liefs.naive_engine import NaiveEngine
 # We use module-scoped fixtures so the model is loaded once for all tests,
 # not once per test (loading takes ~5s and 1GB VRAM).
 
+
 @pytest.fixture(scope="module")
 def model_and_tokenizer():
     """Load model + tokenizer once for the entire test module."""
@@ -41,6 +42,7 @@ def tokenizer(model_and_tokenizer):
 
 
 # ── Tests ─────────────────────────────────────────────────────────────────────
+
 
 class TestDeterminism:
     """Greedy decoding must be deterministic — same input → same output."""
@@ -91,7 +93,9 @@ class TestCoherence:
 
     def test_math_answer(self, engine, tokenizer):
         """The model should answer basic math correctly."""
-        input_ids = format_chat_prompt(tokenizer, "What is 2+2? Answer with just the number.")
+        input_ids = format_chat_prompt(
+            tokenizer, "What is 2+2? Answer with just the number."
+        )
 
         generated_ids, _ = engine.generate(input_ids, max_new_tokens=32)
         text = tokenizer.decode(generated_ids, skip_special_tokens=True)

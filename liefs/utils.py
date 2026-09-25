@@ -24,6 +24,7 @@ class GenerationMetrics:
         total_time_ms: Total wall time in milliseconds.
         peak_vram_mb: Peak GPU VRAM allocated during generation, in MB.
     """
+
     ttft_ms: float = 0.0
     tpot_ms: float = 0.0
     tokens_per_sec: float = 0.0
@@ -94,7 +95,11 @@ def get_eos_token_ids(tokenizer) -> set[int]:
     for stop_str in common_stop_tokens:
         try:
             token_id = tokenizer.convert_tokens_to_ids(stop_str)
-            if isinstance(token_id, int) and token_id != tokenizer.unk_token_id and token_id > 0:
+            if (
+                isinstance(token_id, int)
+                and token_id != tokenizer.unk_token_id
+                and token_id > 0
+            ):
                 eos_ids.add(token_id)
         except Exception:  # noqa: BLE001, S110
             pass

@@ -109,14 +109,20 @@ def main():
 
     # Continuous batching at various batch sizes
     print("\n" + "=" * 70)
-    print(f"{'Batch Size':>12} {'Tokens':>8} {'Time (s)':>10} {'Tok/s':>10} {'Speedup':>10} {'VRAM (MB)':>10}")
+    print(
+        f"{'Batch Size':>12} {'Tokens':>8} {'Time (s)':>10} {'Tok/s':>10} {'Speedup':>10} {'VRAM (MB)':>10}"
+    )
     print("-" * 70)
-    print(f"{'sequential':>12} {seq_result['total_tokens']:>8} {seq_result['total_time_s']:>10.2f} {seq_result['throughput_tok_s']:>10.2f} {'1.0x':>10} {seq_result['peak_vram_mb']:>10.1f}")
+    print(
+        f"{'sequential':>12} {seq_result['total_tokens']:>8} {seq_result['total_time_s']:>10.2f} {seq_result['throughput_tok_s']:>10.2f} {'1.0x':>10} {seq_result['peak_vram_mb']:>10.1f}"
+    )
 
     for batch_size in [2, 4, 8]:
         result = benchmark_continuous(model, tokenizer, workload, batch_size)
         speedup = result["throughput_tok_s"] / seq_result["throughput_tok_s"]
-        print(f"{batch_size:>12} {result['total_tokens']:>8} {result['total_time_s']:>10.2f} {result['throughput_tok_s']:>10.2f} {speedup:>9.1f}x {result['peak_vram_mb']:>10.1f}")
+        print(
+            f"{batch_size:>12} {result['total_tokens']:>8} {result['total_time_s']:>10.2f} {result['throughput_tok_s']:>10.2f} {speedup:>9.1f}x {result['peak_vram_mb']:>10.1f}"
+        )
 
     print()
 

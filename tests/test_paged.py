@@ -61,8 +61,11 @@ class TestPagedCorrectness:
 class TestBlockAllocator:
     def test_allocate_and_free(self):
         allocator = BlockAllocator(
-            num_blocks=4, block_size=8,
-            num_layers=2, num_kv_heads=2, head_dim=64,
+            num_blocks=4,
+            block_size=8,
+            num_layers=2,
+            num_kv_heads=2,
+            head_dim=64,
         )
         assert allocator.num_free_blocks == 4
 
@@ -77,8 +80,11 @@ class TestBlockAllocator:
 
     def test_out_of_blocks(self):
         allocator = BlockAllocator(
-            num_blocks=2, block_size=4,
-            num_layers=1, num_kv_heads=1, head_dim=32,
+            num_blocks=2,
+            block_size=4,
+            num_layers=1,
+            num_kv_heads=1,
+            head_dim=32,
         )
         allocator.allocate()
         allocator.allocate()

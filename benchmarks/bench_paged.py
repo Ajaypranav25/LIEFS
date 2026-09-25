@@ -23,7 +23,9 @@ NUM_RUNS = 3
 def benchmark_engine(engine, engine_name: str) -> dict[str, list[GenerationMetrics]]:
     results = {}
     for name, user_msg, max_tokens in BENCHMARK_PROMPTS:
-        print(f"\n--- [{engine_name}] Prompt: {name!r} (max_new_tokens={max_tokens}) ---")
+        print(
+            f"\n--- [{engine_name}] Prompt: {name!r} (max_new_tokens={max_tokens}) ---"
+        )
         input_ids = format_chat_prompt(engine.tokenizer, user_msg)
 
         # Warm-up
@@ -50,9 +52,11 @@ def main():
     kv_engine = KVCacheEngine(model, tokenizer)
     paged_engine = PagedEngine(model, tokenizer, block_size=16, max_num_blocks=256)
 
-    print(f"\nBlock allocator: {paged_engine.allocator.num_blocks} blocks x "
-          f"{paged_engine.block_size} tokens = "
-          f"{paged_engine.allocator.num_blocks * paged_engine.block_size} max tokens")
+    print(
+        f"\nBlock allocator: {paged_engine.allocator.num_blocks} blocks x "
+        f"{paged_engine.block_size} tokens = "
+        f"{paged_engine.allocator.num_blocks * paged_engine.block_size} max tokens"
+    )
     print(f"Block pool memory: {paged_engine.allocator.total_memory_mb:.1f} MB")
 
     print("\n>>> KV-Cache engine benchmark...")
@@ -81,14 +85,16 @@ def main():
 
         print(f"\n  Prompt: {name!r}")
         print(f"    {'Metric':<20} {'Contiguous':>12} {'Paged':>12}")
-        print(f"    {'-'*44}")
+        print(f"    {'-' * 44}")
         print(f"    {'Throughput (tok/s)':<20} {kv_tps:>12.2f} {paged_tps:>12.2f}")
         print(f"    {'TPOT (ms)':<20} {kv_tpot:>12.2f} {paged_tpot:>12.2f}")
         print(f"    {'Peak VRAM (MB)':<20} {kv_vram:>12.2f} {paged_vram:>12.2f}")
 
     # Memory utilization report
     print("\n  Block allocator utilization after benchmark:")
-    print(f"    Free blocks: {paged_engine.allocator.num_free_blocks}/{paged_engine.allocator.num_blocks}")
+    print(
+        f"    Free blocks: {paged_engine.allocator.num_free_blocks}/{paged_engine.allocator.num_blocks}"
+    )
     print(f"    Utilization: {paged_engine.allocator.utilization:.1%}")
 
 

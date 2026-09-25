@@ -104,7 +104,9 @@ def benchmark_hf_generate(model, tokenizer) -> dict[str, list[GenerationMetrics]
             metrics = GenerationMetrics(
                 ttft_ms=0.0,  # Can't measure with HF generate
                 tpot_ms=(total_time / num_generated) if num_generated > 0 else 0.0,
-                tokens_per_sec=(num_generated / total_time * 1000) if total_time > 0 else 0.0,
+                tokens_per_sec=(num_generated / total_time * 1000)
+                if total_time > 0
+                else 0.0,
                 total_tokens_generated=num_generated,
                 total_time_ms=total_time,
                 peak_vram_mb=get_peak_vram_mb(),
@@ -135,9 +137,21 @@ def print_summary(
 
         print(f"\n  Prompt: {name!r}")
         print(f"    Tokens generated : {n_toks[0]}")
-        print(f"    TTFT             : {statistics.mean(ttfts):>8.2f} ± {statistics.stdev(ttfts):>6.2f} ms" if len(ttfts) > 1 else f"    TTFT             : {ttfts[0]:>8.2f} ms")
-        print(f"    TPOT             : {statistics.mean(tpots):>8.2f} ± {statistics.stdev(tpots):>6.2f} ms" if len(tpots) > 1 else f"    TPOT             : {tpots[0]:>8.2f} ms")
-        print(f"    Throughput       : {statistics.mean(tps):>8.2f} ± {statistics.stdev(tps):>6.2f} tok/s" if len(tps) > 1 else f"    Throughput       : {tps[0]:>8.2f} tok/s")
+        print(
+            f"    TTFT             : {statistics.mean(ttfts):>8.2f} ± {statistics.stdev(ttfts):>6.2f} ms"
+            if len(ttfts) > 1
+            else f"    TTFT             : {ttfts[0]:>8.2f} ms"
+        )
+        print(
+            f"    TPOT             : {statistics.mean(tpots):>8.2f} ± {statistics.stdev(tpots):>6.2f} ms"
+            if len(tpots) > 1
+            else f"    TPOT             : {tpots[0]:>8.2f} ms"
+        )
+        print(
+            f"    Throughput       : {statistics.mean(tps):>8.2f} ± {statistics.stdev(tps):>6.2f} tok/s"
+            if len(tps) > 1
+            else f"    Throughput       : {tps[0]:>8.2f} tok/s"
+        )
         print(f"    Peak VRAM        : {statistics.mean(vrams):>8.2f} MB")
 
         # HF comparison
@@ -147,10 +161,14 @@ def print_summary(
             hf_vrams = [m.peak_vram_mb for m in hf_list]
             hf_mean_tps = statistics.mean(hf_tps)
             naive_mean_tps = statistics.mean(tps)
-            speedup = hf_mean_tps / naive_mean_tps if naive_mean_tps > 0 else float("inf")
+            speedup = (
+                hf_mean_tps / naive_mean_tps if naive_mean_tps > 0 else float("inf")
+            )
 
             print("    --- HF generate ---")
-            print(f"    HF Throughput    : {hf_mean_tps:>8.2f} tok/s  ({speedup:.1f}x faster)")
+            print(
+                f"    HF Throughput    : {hf_mean_tps:>8.2f} tok/s  ({speedup:.1f}x faster)"
+            )
             print(f"    HF Peak VRAM     : {statistics.mean(hf_vrams):>8.2f} MB")
 
 
