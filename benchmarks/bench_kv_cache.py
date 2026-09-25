@@ -26,7 +26,9 @@ def benchmark_engine(engine, engine_name: str) -> dict[str, list[GenerationMetri
     results: dict[str, list[GenerationMetrics]] = {}
 
     for name, user_msg, max_tokens in BENCHMARK_PROMPTS:
-        print(f"\n--- [{engine_name}] Prompt: {name!r} (max_new_tokens={max_tokens}) ---")
+        print(
+            f"\n--- [{engine_name}] Prompt: {name!r} (max_new_tokens={max_tokens}) ---"
+        )
         input_ids = format_chat_prompt(engine.tokenizer, user_msg)
         print(f"  Prompt length: {input_ids.shape[1]} tokens")
 
@@ -79,10 +81,16 @@ def print_comparison(
 
         print(f"\n  Prompt: {name!r} ({n_toks} tokens)")
         print(f"    {'Metric':<20} {'Naive':>12} {'KV-Cache':>12} {'Speedup':>10}")
-        print(f"    {'-'*54}")
-        print(f"    {'Throughput (tok/s)':<20} {naive_tps:>12.2f} {kv_tps:>12.2f} {speedup:>9.1f}x")
-        print(f"    {'TTFT (ms)':<20} {naive_ttft:>12.2f} {kv_ttft:>12.2f} {naive_ttft/kv_ttft if kv_ttft > 0 else 0:>9.1f}x")
-        print(f"    {'TPOT (ms)':<20} {naive_tpot:>12.2f} {kv_tpot:>12.2f} {naive_tpot/kv_tpot if kv_tpot > 0 else 0:>9.1f}x")
+        print(f"    {'-' * 54}")
+        print(
+            f"    {'Throughput (tok/s)':<20} {naive_tps:>12.2f} {kv_tps:>12.2f} {speedup:>9.1f}x"
+        )
+        print(
+            f"    {'TTFT (ms)':<20} {naive_ttft:>12.2f} {kv_ttft:>12.2f} {naive_ttft / kv_ttft if kv_ttft > 0 else 0:>9.1f}x"
+        )
+        print(
+            f"    {'TPOT (ms)':<20} {naive_tpot:>12.2f} {kv_tpot:>12.2f} {naive_tpot / kv_tpot if kv_tpot > 0 else 0:>9.1f}x"
+        )
         print(f"    {'Peak VRAM (MB)':<20} {naive_vram:>12.2f} {kv_vram:>12.2f}")
 
 

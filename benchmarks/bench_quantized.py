@@ -23,7 +23,9 @@ NUM_RUNS = 3
 def benchmark_engine(engine, engine_name: str) -> dict[str, list[GenerationMetrics]]:
     results = {}
     for name, user_msg, max_tokens in BENCHMARK_PROMPTS:
-        print(f"\n--- [{engine_name}] Prompt: {name!r} (max_new_tokens={max_tokens}) ---")
+        print(
+            f"\n--- [{engine_name}] Prompt: {name!r} (max_new_tokens={max_tokens}) ---"
+        )
         input_ids = format_chat_prompt(engine.tokenizer, user_msg)
 
         # Warm-up
@@ -66,7 +68,9 @@ def main():
     torch.cuda.synchronize()
     vram_int8 = torch.cuda.memory_allocated() / (1024 * 1024)
     print(f"  INT8 Model VRAM: {vram_int8:.1f} MB")
-    print(f"  Weight Memory Saved: {vram_fp16 - vram_int8:.1f} MB ({(vram_fp16 - vram_int8) / vram_fp16 * 100:.1f}% reduction)")
+    print(
+        f"  Weight Memory Saved: {vram_fp16 - vram_int8:.1f} MB ({(vram_fp16 - vram_int8) / vram_fp16 * 100:.1f}% reduction)"
+    )
 
     int8_engine = KVCacheEngine(model, tokenizer)
 
@@ -96,11 +100,19 @@ def main():
 
         print(f"\n  Prompt: {name!r}")
         print(f"    {'Metric':<22} {'FP16':>12} {'INT8':>12} {'Change':>12}")
-        print(f"    {'-'*60}")
-        print(f"    {'Throughput (tok/s)':<22} {fp16_tps:>12.2f} {int8_tps:>12.2f} {int8_tps / fp16_tps if fp16_tps > 0 else 0:>11.2f}x")
-        print(f"    {'TTFT (ms)':<22} {fp16_ttft:>12.2f} {int8_ttft:>12.2f} {int8_ttft / fp16_ttft if fp16_ttft > 0 else 0:>11.2f}x")
-        print(f"    {'TPOT (ms)':<22} {fp16_tpot:>12.2f} {int8_tpot:>12.2f} {int8_tpot / fp16_tpot if fp16_tpot > 0 else 0:>11.2f}x")
-        print(f"    {'Peak VRAM (MB)':<22} {fp16_vram:>12.2f} {int8_vram:>12.2f} {(int8_vram - fp16_vram) / fp16_vram * 100:>+11.1f}%")
+        print(f"    {'-' * 60}")
+        print(
+            f"    {'Throughput (tok/s)':<22} {fp16_tps:>12.2f} {int8_tps:>12.2f} {int8_tps / fp16_tps if fp16_tps > 0 else 0:>11.2f}x"
+        )
+        print(
+            f"    {'TTFT (ms)':<22} {fp16_ttft:>12.2f} {int8_ttft:>12.2f} {int8_ttft / fp16_ttft if fp16_ttft > 0 else 0:>11.2f}x"
+        )
+        print(
+            f"    {'TPOT (ms)':<22} {fp16_tpot:>12.2f} {int8_tpot:>12.2f} {int8_tpot / fp16_tpot if fp16_tpot > 0 else 0:>11.2f}x"
+        )
+        print(
+            f"    {'Peak VRAM (MB)':<22} {fp16_vram:>12.2f} {int8_vram:>12.2f} {(int8_vram - fp16_vram) / fp16_vram * 100:>+11.1f}%"
+        )
 
 
 if __name__ == "__main__":

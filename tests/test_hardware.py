@@ -18,7 +18,7 @@ def test_hardware_profile_detection():
     assert hw.cpu_logical_cores >= 1
     assert hw.ram_total_gb > 0.0
     assert isinstance(hw.cuda_available, bool)
-    
+
     d = hw.to_dict()
     assert "cpu_model" in d
     assert "ram_total_gb" in d

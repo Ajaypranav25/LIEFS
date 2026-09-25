@@ -30,11 +30,19 @@ class PagedEngine:
         self.block_size = block_size
 
         config = model.config
-        self.num_layers = getattr(config, 'num_hidden_layers', getattr(config, 'n_layer', 24))
-        num_attn_heads = getattr(config, 'num_attention_heads', getattr(config, 'n_head', 16))
-        self.num_kv_heads = getattr(config, 'num_key_value_heads', num_attn_heads)
-        hidden_size = getattr(config, 'hidden_size', getattr(config, 'n_embd', 1024))
-        self.head_dim = getattr(config, 'head_dim', hidden_size // num_attn_heads if num_attn_heads > 0 else 64)
+        self.num_layers = getattr(
+            config, "num_hidden_layers", getattr(config, "n_layer", 24)
+        )
+        num_attn_heads = getattr(
+            config, "num_attention_heads", getattr(config, "n_head", 16)
+        )
+        self.num_kv_heads = getattr(config, "num_key_value_heads", num_attn_heads)
+        hidden_size = getattr(config, "hidden_size", getattr(config, "n_embd", 1024))
+        self.head_dim = getattr(
+            config,
+            "head_dim",
+            hidden_size // num_attn_heads if num_attn_heads > 0 else 64,
+        )
 
         self.allocator = BlockAllocator(
             num_blocks=max_num_blocks,
@@ -49,9 +57,11 @@ class PagedEngine:
     def _extract_kv_from_cache(self, cache) -> list[tuple[torch.Tensor, torch.Tensor]]:
         """Extract per-layer (K, V) tensors from the model's cache object."""
         kv_pairs = []
-        if hasattr(cache, 'key_cache') and hasattr(cache, 'value_cache'):
+        if hasattr(cache, "key_cache") and hasattr(cache, "value_cache"):
             for layer_idx in range(len(cache.key_cache)):
-                kv_pairs.append((cache.key_cache[layer_idx], cache.value_cache[layer_idx]))
+                kv_pairs.append(
+                    (cache.key_cache[layer_idx], cache.value_cache[layer_idx])
+                )
         else:
             for layer_cache in cache:
                 kv_pairs.append((layer_cache[0], layer_cache[1]))
@@ -144,6 +154,7 @@ class PagedEngine:
         system_message: str = "You are a helpful assistant.",
     ) -> tuple[str, GenerationMetrics]:
         from liefs.model_loader import format_chat_prompt
+
         input_ids = format_chat_prompt(self.tokenizer, prompt, system_message)
         generated_ids, metrics = self.generate(input_ids, max_new_tokens)
         return self.tokenizer.decode(generated_ids, skip_special_tokens=True), metrics

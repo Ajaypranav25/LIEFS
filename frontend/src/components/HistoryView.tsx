@@ -28,7 +28,24 @@ export const HistoryView: React.FC = () => {
   };
 
   useEffect(() => {
-    loadHistory();
+    let active = true;
+    setLoading(true);
+    getBenchmarkHistory(user?.id)
+      .then((data) => {
+        if (active) {
+          setHistory(data);
+          setLoading(false);
+        }
+      })
+      .catch((e) => {
+        if (active) {
+          console.warn('Failed to load history:', e);
+          setLoading(false);
+        }
+      });
+    return () => {
+      active = false;
+    };
   }, [user?.id]);
 
   const handleExportJson = () => {

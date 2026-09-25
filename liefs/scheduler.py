@@ -26,6 +26,7 @@ from liefs.utils import get_eos_token_ids
 
 class RequestStatus(Enum):
     """Lifecycle states for a generation request."""
+
     QUEUED = auto()
     PREFILLING = auto()
     GENERATING = auto()
@@ -35,16 +36,17 @@ class RequestStatus(Enum):
 @dataclass
 class GenerationRequest:
     """A single generation request with its state."""
+
     request_id: str
-    input_ids: torch.Tensor           # (1, prompt_len) on CUDA
+    input_ids: torch.Tensor  # (1, prompt_len) on CUDA
     max_new_tokens: int
     status: RequestStatus = RequestStatus.QUEUED
 
     # Populated during generation
     generated_ids: list[int] = field(default_factory=list)
-    kv_cache: object = None           # DynamicCache or tuple of (K, V)
+    kv_cache: object = None  # DynamicCache or tuple of (K, V)
     current_logits: torch.Tensor | None = None  # (1, vocab_size)
-    finish_reason: str = ""           # "stop" (EOS) or "length" (max tokens)
+    finish_reason: str = ""  # "stop" (EOS) or "length" (max tokens)
 
     # Timing
     created_at: float = 0.0

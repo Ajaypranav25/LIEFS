@@ -130,7 +130,9 @@ class KVCacheEngine:
                 break
 
             generated_ids.append(next_token_id)
-            token_text = self.tokenizer.decode([next_token_id], skip_special_tokens=False)
+            token_text = self.tokenizer.decode(
+                [next_token_id], skip_special_tokens=False
+            )
 
             running_metrics = self._compute_metrics(token_times_ms, len(generated_ids))
             metrics_dict = {
