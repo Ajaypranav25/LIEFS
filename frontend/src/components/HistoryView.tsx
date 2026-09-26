@@ -29,20 +29,22 @@ export const HistoryView: React.FC = () => {
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    getBenchmarkHistory(user?.id)
-      .then((data) => {
+    const fetchHistory = async () => {
+      setLoading(true);
+      try {
+        const data = await getBenchmarkHistory(user?.id);
         if (active) {
           setHistory(data);
           setLoading(false);
         }
-      })
-      .catch((e) => {
+      } catch (e) {
         if (active) {
           console.warn('Failed to load history:', e);
           setLoading(false);
         }
-      });
+      }
+    };
+    fetchHistory();
     return () => {
       active = false;
     };

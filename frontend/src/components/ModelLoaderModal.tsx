@@ -55,10 +55,19 @@ export const ModelLoaderModal: React.FC<ModelLoaderModalProps> = ({
   }, [isOpen]);
 
   useEffect(() => {
+    let active = true;
     if (isOpen) {
-      setErrorMsg(null);
-      setSelectedPresetId(currentModelName);
+      const resetState = async () => {
+        if (active) {
+          setErrorMsg(null);
+          setSelectedPresetId(currentModelName);
+        }
+      };
+      resetState();
     }
+    return () => {
+      active = false;
+    };
   }, [isOpen, currentModelName]);
 
   if (!isOpen) return null;
