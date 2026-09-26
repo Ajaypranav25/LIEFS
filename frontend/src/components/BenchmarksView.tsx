@@ -78,28 +78,35 @@ export const BenchmarksView: React.FC<BenchmarksViewProps> = ({
   const [batchScaling, setBatchScaling] = useState<BatchScalePoint[] | null>(null);
   const [copyStatus, setCopyStatus] = useState<boolean>(false);
 
-  const loadEnvironment = async () => {
-    try {
-      const [hw, meta] = await Promise.all([
-        fetchHardwareInfo().catch(() => null),
-        fetchCurrentModel().catch(() => null),
-      ]);
-      if (hw) setHardware(hw);
-      if (meta) setModelMeta(meta);
-
-      // Load reference presets if no live benchmark yet
-      const presets = await fetchPresetBenchmarks().catch(() => null);
-      if (presets && presets.benchmarks && presets.benchmarks.length > 1) {
-        const std = presets.benchmarks[1];
-        setLiveResults(std.results);
-      }
-    } catch (e) {
-      console.warn('Failed to load benchmark environment:', e);
-    }
-  };
-
   useEffect(() => {
+    let active = true;
+    const loadEnvironment = async () => {
+      try {
+        const [hw, meta] = await Promise.all([
+          fetchHardwareInfo().catch(() => null),
+          fetchCurrentModel().catch(() => null),
+        ]);
+        if (active) {
+          if (hw) setHardware(hw);
+          if (meta) setModelMeta(meta);
+        }
+
+        // Load reference presets if no live benchmark yet
+        const presets = await fetchPresetBenchmarks().catch(() => null);
+        if (active && presets && presets.benchmarks && presets.benchmarks.length > 1) {
+          const std = presets.benchmarks[1];
+          setLiveResults(std.results);
+        }
+      } catch (e) {
+        if (active) {
+          console.warn('Failed to load benchmark environment:', e);
+        }
+      }
+    };
     loadEnvironment();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const handleRunBenchmark = async () => {
