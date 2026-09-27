@@ -289,8 +289,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
               value={inputText}
               onChange={(e) => {
                 setInputText(e.target.value);
-                e.target.style.height = 'auto';
-                e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+                requestAnimationFrame(() => {
+                  e.target.style.height = 'auto';
+                  e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+                });
               }}
               onKeyDown={handleKeyDown}
               disabled={isGenerating || !serverOnline}
