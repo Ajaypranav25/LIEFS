@@ -19,3 +19,4 @@ venv/
 credentials*.json
 .DS_Store
 Thumbs.db
+.coverage
