@@ -3,14 +3,15 @@ Tests for universal model loading helpers, resolution, presets, and metadata.
 """
 
 from unittest.mock import MagicMock
+
 import torch
 
 from liefs.model_loader import (
     POPULAR_MODEL_PRESETS,
+    format_chat_prompt,
+    get_model_metadata,
     resolve_device,
     resolve_dtype,
-    get_model_metadata,
-    format_chat_prompt,
 )
 
 
