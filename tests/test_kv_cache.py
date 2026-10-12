@@ -110,3 +110,17 @@ class TestKVCacheMetrics:
             # TPOT should generally be faster than TTFT with KV-cache
             # (decode = 1 token, prefill = all prompt tokens)
             assert metrics.tpot_ms <= metrics.ttft_ms * 2  # generous margin
+
+    def test_kv_cache_generate_stream(self, kv_engine, tokenizer):
+        """Test stream generation."""
+        input_ids = format_chat_prompt(tokenizer, "Say hi")
+
+        chunks = []
+        for token_id, token_text, metrics, is_done in kv_engine.generate_stream(
+            input_ids, max_new_tokens=5
+        ):
+            chunks.append((token_id, token_text, metrics, is_done))
+
+        assert len(chunks) > 0
+        assert chunks[-1][3] is True  # Last chunk should be is_done=True
+        assert chunks[-1][2]["generated_tokens"] <= 5

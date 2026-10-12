@@ -161,3 +161,17 @@ class TestMetrics:
 
         if metrics.total_tokens_generated > 1:
             assert metrics.ttft_ms < metrics.total_time_ms
+
+    def test_naive_generate_stream(self, engine, tokenizer):
+        """Test stream generation."""
+        input_ids = format_chat_prompt(tokenizer, "Say hi")
+
+        chunks = []
+        for token_id, token_text, metrics, is_done in engine.generate_stream(
+            input_ids, max_new_tokens=5
+        ):
+            chunks.append((token_id, token_text, metrics, is_done))
+
+        assert len(chunks) > 0
+        assert chunks[-1][3] is True  # Last chunk should be is_done=True
+        assert chunks[-1][2]["generated_tokens"] <= 5
