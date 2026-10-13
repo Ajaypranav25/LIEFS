@@ -102,3 +102,40 @@ def test_benchmarks_preset(client):
     assert "device" in data
     assert "benchmarks" in data
     assert isinstance(data["benchmarks"], list)
+
+
+def test_completions_stream(client):
+    # Ensure a model is loaded first
+    client.post("/v1/models/load", json={"model_name": "Qwen/Qwen2.5-0.5B-Instruct"})
+
+    payload = {"prompt": "Say hi", "max_tokens": 10, "stream": True, "engine": "naive"}
+
+    with client.stream("POST", "/v1/completions", json=payload) as response:
+        assert response.status_code == 200
+
+        chunks_received = 0
+        for chunk in response.iter_lines():
+            if chunk:
+                chunks_received += 1
+                assert chunk.startswith("data: ")
+
+        assert chunks_received > 0
+
+
+def test_run_computer_benchmark(client):
+    # Ensure a model is loaded first
+    client.post("/v1/models/load", json={"model_name": "Qwen/Qwen2.5-0.5B-Instruct"})
+
+    payload = {
+        "prompt": "Test prompt",
+        "max_tokens": 5,
+        "engines": ["naive", "kv_cache"],
+        "include_batch_scaling": False,
+    }
+    res = client.post("/v1/benchmarks/run", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert "timestamp" in data
+    assert "score" in data
+    assert "results" in data
+    assert len(data["results"]) > 0

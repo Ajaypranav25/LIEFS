@@ -95,9 +95,13 @@ def run_demo():
 
     for req in completed:
         ans = tokenizer.decode(req.generated_ids, skip_special_tokens=True)
-        print(f"  * Request [{req.request_id}] -> {ans.strip()[:60]}... ({req.tokens_generated} tokens)")
+        print(
+            f"  * Request [{req.request_id}] -> {ans.strip()[:60]}... ({req.tokens_generated} tokens)"
+        )
 
-    print(f"\n  Batch throughput: {sum(r.tokens_generated for r in completed) / total_time:.2f} tok/s in {total_time:.2f}s\n")
+    print(
+        f"\n  Batch throughput: {sum(r.tokens_generated for r in completed) / total_time:.2f} tok/s in {total_time:.2f}s\n"
+    )
 
     # ── Demo 5: INT8 Quantized Engine ────────────────────────────────────
     print("-" * 80)
@@ -108,7 +112,9 @@ def run_demo():
     vram_after = torch.cuda.memory_allocated() / (1024 * 1024)
 
     print(f"  VRAM before quantization: {vram_before:.1f} MB")
-    print(f"  VRAM after quantization:  {vram_after:.1f} MB (Saved {vram_before - vram_after:.1f} MB)")
+    print(
+        f"  VRAM after quantization:  {vram_after:.1f} MB (Saved {vram_before - vram_after:.1f} MB)"
+    )
 
     torch.cuda.empty_cache()
     gen_ids, metrics = q_engine.generate(input_ids, max_new_tokens=max_tokens)
