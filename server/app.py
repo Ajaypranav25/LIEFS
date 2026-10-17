@@ -37,6 +37,7 @@ from liefs.model_loader import (
 )
 from liefs.naive_engine import NaiveEngine
 from liefs.paged_engine import PagedEngine
+from liefs.quantized_engine import create_quantized_engine
 from liefs.scheduler import ContinuousBatchScheduler
 from liefs.utils import (
     reset_vram_stats,
@@ -63,6 +64,7 @@ app_state = {
     "kv_engine": None,
     "naive_engine": None,
     "paged_engine": None,
+    "quantized_engine": None,
     "recent_metrics": [],
 }
 
@@ -90,6 +92,9 @@ def instantiate_engines(
     if app_state.get("paged_engine") is not None:
         del app_state["paged_engine"]
         app_state["paged_engine"] = None
+    if app_state.get("quantized_engine") is not None:
+        del app_state["quantized_engine"]
+        app_state["quantized_engine"] = None
 
     gc.collect()
     if torch.cuda.is_available():
@@ -106,6 +111,13 @@ def instantiate_engines(
 
     kv_engine = KVCacheEngine(model, tokenizer)
     naive_engine = NaiveEngine(model, tokenizer)
+
+    try:
+        quantized_engine = create_quantized_engine(model, tokenizer)
+    except Exception as e:  # noqa: BLE001
+        print(f"Quantized engine notice: {e}")
+        quantized_engine = None
+
     try:
         paged_engine = PagedEngine(model, tokenizer, block_size=16, max_num_blocks=256)
     except Exception as e:  # noqa: BLE001
@@ -119,6 +131,7 @@ def instantiate_engines(
     app_state["kv_engine"] = kv_engine
     app_state["naive_engine"] = naive_engine
     app_state["paged_engine"] = paged_engine
+    app_state["quantized_engine"] = quantized_engine
 
 
 @asynccontextmanager
@@ -257,7 +270,7 @@ async def list_models():
                 "created": int(time.time()),
                 "owned_by": "liefs",
                 "root": current_name,
-                "engines": ["kv_cache", "naive", "paged", "continuous_batching"],
+                "engines": ["kv_cache", "naive", "paged", "continuous_batching", "quantized"],
             }
         ],
     }
@@ -327,6 +340,8 @@ async def create_completion(request: CompletionRequest):
         engine = app_state.get("naive_engine") or NaiveEngine(model, tokenizer)
     elif engine_type == "paged" and app_state.get("paged_engine"):
         engine = app_state.get("paged_engine")
+    elif engine_type == "quantized" and app_state.get("quantized_engine"):
+        engine = app_state.get("quantized_engine")
     else:
         engine = app_state.get("kv_engine") or KVCacheEngine(model, tokenizer)
 

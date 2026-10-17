@@ -129,7 +129,7 @@ def test_run_computer_benchmark(client):
     payload = {
         "prompt": "Test prompt",
         "max_tokens": 5,
-        "engines": ["naive", "kv_cache"],
+        "engines": ["naive", "kv_cache", "quantized"],
         "include_batch_scaling": False,
     }
     res = client.post("/v1/benchmarks/run", json=payload)
