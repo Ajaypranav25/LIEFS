@@ -83,7 +83,7 @@ export async function fetchPresetBenchmarks(): Promise<PresetBenchmarksResponse>
 export async function runLiveBenchmark(
   prompt: string,
   maxTokens: number = 128,
-  engines: string[] = ['naive', 'kv_cache', 'paged']
+  engines: string[] = ['naive', 'kv_cache', 'paged', 'quantized']
 ): Promise<{ timestamp: number; prompt: string; max_tokens: number; results: BenchmarkResult[] }> {
   const res = await fetch(`${API_BASE}/v1/benchmarks/run`, {
     method: 'POST',
@@ -106,7 +106,7 @@ export async function runComputerBenchmark(payload: {
     body: JSON.stringify({
       prompt: payload.prompt || 'Explain how transformer self-attention works step by step in plain terms.',
       max_tokens: payload.max_tokens ?? 128,
-      engines: payload.engines || ['naive', 'kv_cache', 'paged'],
+      engines: payload.engines || ['naive', 'kv_cache', 'paged', 'quantized'],
       include_batch_scaling: payload.include_batch_scaling ?? true,
     }),
   });

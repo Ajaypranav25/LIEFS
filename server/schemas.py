@@ -60,7 +60,7 @@ class BenchmarkRunRequest(BaseModel):
         default="Explain how a transformer model works step by step.", max_length=50000
     )
     max_tokens: int = Field(default=128, ge=1, le=2048)
-    engines: list[str] = ["naive", "kv_cache", "paged"]
+    engines: list[str] = ["naive", "kv_cache", "paged", "quantized"]
 
 
 class BenchmarkEngineResult(BaseModel):
@@ -84,7 +84,7 @@ class ComputerBenchmarkRequest(BaseModel):
         max_length=50000,
     )
     max_tokens: int = Field(default=128, ge=1, le=2048)
-    engines: list[str] = ["naive", "kv_cache", "paged"]
+    engines: list[str] = ["naive", "kv_cache", "paged", "quantized"]
     include_batch_scaling: bool = True
 
 
