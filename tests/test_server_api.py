@@ -130,7 +130,7 @@ def test_run_computer_benchmark(client):
         "prompt": "Test prompt",
         "max_tokens": 5,
         "engines": ["naive", "kv_cache", "quantized"],
-        "include_batch_scaling": False,
+        "include_batch_scaling": True,
     }
     res = client.post("/v1/benchmarks/run", json=payload)
     assert res.status_code == 200
