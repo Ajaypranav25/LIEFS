@@ -270,7 +270,13 @@ async def list_models():
                 "created": int(time.time()),
                 "owned_by": "liefs",
                 "root": current_name,
-                "engines": ["kv_cache", "naive", "paged", "continuous_batching", "quantized"],
+                "engines": [
+                    "kv_cache",
+                    "naive",
+                    "paged",
+                    "continuous_batching",
+                    "quantized",
+                ],
             }
         ],
     }
@@ -712,13 +718,16 @@ async def run_computer_benchmark(request: ComputerBenchmarkRequest):
                 model, tokenizer, max_batch_size=b_size
             )
             for req_i in range(b_size):
+                req_input_ids = format_chat_prompt(
+                    tokenizer, f"Compute step {req_i}", device=device_str
+                )
                 scheduler.add_request(
-                    f"Compute step {req_i}", max_new_tokens=min(32, request.max_tokens)
+                    req_input_ids, max_new_tokens=min(32, request.max_tokens)
                 )
             t_start = time.perf_counter()
-            req_metrics = scheduler.run_until_complete()
+            req_metrics = scheduler.run()
             t_batch_elapsed = (time.perf_counter() - t_start) * 1000.0
-            total_toks = sum(m.total_tokens_generated for m in req_metrics)
+            total_toks = sum(m.tokens_generated for m in req_metrics)
             agg_throughput = (
                 round((total_toks / t_batch_elapsed * 1000.0), 2)
                 if t_batch_elapsed > 0
