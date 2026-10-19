@@ -399,7 +399,7 @@ async def create_completion(request: CompletionRequest):
                         }
                         yield f"data: {json.dumps(chunk)}\n\n"
                         yield "data: [DONE]\n\n"
-                        app_state["recent_metrics"].append(metrics_dict)
+                        app_state.setdefault("recent_metrics", []).append(metrics_dict)
                         break
                     else:
                         chunk = {
@@ -457,7 +457,7 @@ async def create_completion(request: CompletionRequest):
         "gen_len": len(generated_ids),
         "engine": engine_type,
     }
-    app_state["recent_metrics"].append(metrics_dict)
+    app_state.setdefault("recent_metrics", []).append(metrics_dict)
 
     return CompletionResponse(
         id=response_id,
