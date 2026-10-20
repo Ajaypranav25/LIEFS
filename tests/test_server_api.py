@@ -122,6 +122,21 @@ def test_completions_stream(client):
         assert chunks_received > 0
 
 
+def test_completions_non_stream(client):
+    # Ensure a model is loaded first
+    client.post("/v1/models/load", json={"model_name": "Qwen/Qwen2.5-0.5B-Instruct"})
+
+    payload = {"prompt": "Say hi", "max_tokens": 10, "stream": False, "engine": "naive"}
+    res = client.post("/v1/completions", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert "choices" in data
+    assert len(data["choices"]) > 0
+    assert "text" in data["choices"][0]
+    assert "metrics" in data
+    assert "usage" in data
+
+
 def test_run_computer_benchmark(client):
     # Ensure a model is loaded first
     client.post("/v1/models/load", json={"model_name": "Qwen/Qwen2.5-0.5B-Instruct"})
