@@ -79,7 +79,8 @@ def test_load_and_unload_model(client):
     # Test unload first
     res = client.post("/v1/models/unload")
     assert res.status_code == 200
-    assert res.json() == {"status": "ok", "message": "Model unloaded and VRAM cleared"}
+    assert res.json() == {"status": "ok",
+                          "message": "Model unloaded and VRAM cleared"}
 
     # Test load
     # Use a small model for test if we want, or just the default.
@@ -106,9 +107,11 @@ def test_benchmarks_preset(client):
 
 def test_completions_stream(client):
     # Ensure a model is loaded first
-    client.post("/v1/models/load", json={"model_name": "Qwen/Qwen2.5-0.5B-Instruct"})
+    client.post("/v1/models/load",
+                json={"model_name": "Qwen/Qwen2.5-0.5B-Instruct"})
 
-    payload = {"prompt": "Say hi", "max_tokens": 10, "stream": True, "engine": "naive"}
+    payload = {"prompt": "Say hi", "max_tokens": 10,
+               "stream": True, "engine": "naive"}
 
     with client.stream("POST", "/v1/completions", json=payload) as response:
         assert response.status_code == 200
@@ -124,7 +127,8 @@ def test_completions_stream(client):
 
 def test_run_computer_benchmark(client):
     # Ensure a model is loaded first
-    client.post("/v1/models/load", json={"model_name": "Qwen/Qwen2.5-0.5B-Instruct"})
+    client.post("/v1/models/load",
+                json={"model_name": "Qwen/Qwen2.5-0.5B-Instruct"})
 
     payload = {
         "prompt": "Test prompt",
@@ -140,10 +144,12 @@ def test_run_computer_benchmark(client):
     assert "results" in data
     assert len(data["results"]) > 0
 
+
 def test_metrics_endpoint(client):
     res = client.get("/metrics")
     assert res.status_code == 200
     assert "recent_metrics" in res.json()
+
 
 def test_unload_model_handles_none(client):
     res = client.post("/v1/models/unload")
@@ -151,11 +157,13 @@ def test_unload_model_handles_none(client):
     res2 = client.post("/v1/models/unload")
     assert res2.status_code == 200
 
+
 def test_completions_no_model(client):
     client.post("/v1/models/unload")
     payload = {"prompt": "Hello", "max_tokens": 5}
     res = client.post("/v1/completions", json=payload)
     assert res.status_code == 503
+
 
 def test_benchmark_no_model(client):
     client.post("/v1/models/unload")
@@ -163,15 +171,20 @@ def test_benchmark_no_model(client):
     res = client.post("/v1/benchmarks/run", json=payload)
     assert res.status_code == 503
 
+
 def test_completions_non_stream(client):
-    client.post("/v1/models/load", json={"model_name": "Qwen/Qwen2.5-0.5B-Instruct"})
-    payload = {"prompt": "Hello", "max_tokens": 5, "stream": False, "engine": "naive"}
+    client.post("/v1/models/load",
+                json={"model_name": "Qwen/Qwen2.5-0.5B-Instruct"})
+    payload = {"prompt": "Hello", "max_tokens": 5,
+               "stream": False, "engine": "naive"}
     res = client.post("/v1/completions", json=payload)
     assert res.status_code == 200
     assert "choices" in res.json()
 
+
 def test_benchmark_engines_options(client):
-    client.post("/v1/models/load", json={"model_name": "Qwen/Qwen2.5-0.5B-Instruct"})
+    client.post("/v1/models/load",
+                json={"model_name": "Qwen/Qwen2.5-0.5B-Instruct"})
     payload = {
         "prompt": "Test prompt",
         "max_tokens": 5,
@@ -182,6 +195,7 @@ def test_benchmark_engines_options(client):
     assert res.status_code == 200
     data = res.json()
     assert "results" in data
+
 
 def test_load_model_failure(client):
     payload = {"model_name": "invalid_model_name_does_not_exist"}

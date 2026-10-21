@@ -67,7 +67,7 @@ def test_computer_score_tiers():
     res_s = calculate_computer_score(
         tokens_per_sec=200.0,
         ttft_ms=5.0,
-        model_param_count_m=7000.0, # Large model -> higher weight
+        model_param_count_m=7000.0,  # Large model -> higher weight
         memory_bandwidth_gbs=400.0,
         is_gpu=True,
     )
@@ -110,7 +110,8 @@ def test_get_cpu_name_windows(mock_system):
     from unittest.mock import MagicMock
     mock_winreg = MagicMock()
     _ = mock_winreg.OpenKey.return_value
-    mock_winreg.QueryValueEx.return_value = ("Intel(R) Core(TM) i9 CPU  ", None)
+    mock_winreg.QueryValueEx.return_value = (
+        "Intel(R) Core(TM) i9 CPU  ", None)
 
     # Patch winreg in sys.modules so the import winreg in hardware_profiler gets the mock
     with patch.dict(sys.modules, {'winreg': mock_winreg}):
