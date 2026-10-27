@@ -201,3 +201,65 @@ def test_load_model_failure(client):
     payload = {"model_name": "invalid_model_name_does_not_exist"}
     res = client.post("/v1/models/load", json=payload)
     assert res.status_code == 400
+
+
+def test_completions_exception_handled(client, monkeypatch):
+    client.post("/v1/models/load",
+                json={"model_name": "Qwen/Qwen2.5-0.5B-Instruct"})
+
+    # We will mock the engine's generate method to raise an Exception
+    import server.app as app_module
+
+    class FakeEngine:
+        def generate(self, *args, **kwargs):
+            raise RuntimeError("Mocked generation failure")
+
+        def generate_stream(self, *args, **kwargs):
+            raise RuntimeError("Mocked stream failure")
+            yield  # To make it a generator
+
+    monkeypatch.setitem(app_module.app_state, "naive_engine", FakeEngine())
+
+    payload = {"prompt": "Hello", "max_tokens": 5,
+               "stream": False, "engine": "naive"}
+    res = client.post("/v1/completions", json=payload)
+    assert res.status_code == 500
+    assert "Mocked generation failure" in res.json()["detail"]
+
+    payload_stream = {"prompt": "Hello", "max_tokens": 5,
+                      "stream": True, "engine": "naive"}
+    with client.stream("POST", "/v1/completions", json=payload_stream) as response:
+        assert response.status_code == 200
+
+        chunks = []
+        for chunk in response.iter_lines():
+            if chunk:
+                chunks.append(chunk)
+
+        assert len(chunks) > 0
+        assert "error" in chunks[0]
+        assert "Mocked stream failure" in chunks[0]
+
+
+def test_engine_fallback_paged_quantized(client, monkeypatch):
+    client.post("/v1/models/load",
+                json={"model_name": "Qwen/Qwen2.5-0.5B-Instruct"})
+
+    import server.app as app_module
+    # test fallback to kv_cache when paged or quantized is requested but not available
+    monkeypatch.setitem(app_module.app_state, "paged_engine", None)
+    monkeypatch.setitem(app_module.app_state, "quantized_engine", None)
+
+    # Request paged
+    payload_paged = {"prompt": "Hello", "max_tokens": 5,
+                     "stream": False, "engine": "paged"}
+    res = client.post("/v1/completions", json=payload_paged)
+    assert res.status_code == 200
+    assert "paged" not in res.json()["metrics"].get("engine_fallback", "")
+
+    # Request quantized
+    payload_quantized = {"prompt": "Hello", "max_tokens": 5,
+                         "stream": False, "engine": "quantized"}
+    res = client.post("/v1/completions", json=payload_quantized)
+    assert res.status_code == 200
+    assert "paged" not in res.json()["metrics"].get("engine_fallback", "")
