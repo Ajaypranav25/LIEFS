@@ -23,7 +23,8 @@ API_URL = "http://127.0.0.1:8000/v1/completions"
 
 
 async def send_request(session, prompt):
-    payload = {"prompt": prompt, "max_tokens": 50, "temperature": 0.0, "stream": False}
+    payload = {"prompt": prompt, "max_tokens": 50,
+               "temperature": 0.0, "stream": False}
     start = time.time()
     try:
         async with session.post(API_URL, json=payload) as response:
@@ -65,8 +66,10 @@ async def run_batch(concurrency, num_requests=10):
     latencies.sort()
     avg_latency = sum(latencies) / len(latencies)
     p50 = latencies[len(latencies) // 2]
-    p95 = latencies[int(len(latencies) * 0.95)] if len(latencies) > 1 else latencies[-1]
-    p99 = latencies[int(len(latencies) * 0.99)] if len(latencies) > 1 else latencies[-1]
+    p95 = latencies[int(len(latencies) * 0.95)
+                    ] if len(latencies) > 1 else latencies[-1]
+    p99 = latencies[int(len(latencies) * 0.99)
+                    ] if len(latencies) > 1 else latencies[-1]
 
     total_tokens = sum(
         [
@@ -79,7 +82,8 @@ async def run_batch(concurrency, num_requests=10):
     token_throughput = total_tokens / total_time
 
     print(f"Completed in {total_time:.2f}s")
-    print(f"Throughput: {throughput:.2f} req/s ({token_throughput:.2f} tokens/s)")
+    print(
+        f"Throughput: {throughput:.2f} req/s ({token_throughput:.2f} tokens/s)")
     print(
         f"Latency: Avg={avg_latency:.3f}s | p50={p50:.3f}s | p95={p95:.3f}s | p99={p99:.3f}s"
     )

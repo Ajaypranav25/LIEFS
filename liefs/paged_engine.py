@@ -36,8 +36,10 @@ class PagedEngine:
         num_attn_heads = getattr(
             config, "num_attention_heads", getattr(config, "n_head", 16)
         )
-        self.num_kv_heads = getattr(config, "num_key_value_heads", num_attn_heads)
-        hidden_size = getattr(config, "hidden_size", getattr(config, "n_embd", 1024))
+        self.num_kv_heads = getattr(
+            config, "num_key_value_heads", num_attn_heads)
+        hidden_size = getattr(config, "hidden_size",
+                              getattr(config, "n_embd", 1024))
         self.head_dim = getattr(
             config,
             "head_dim",
@@ -119,7 +121,8 @@ class PagedEngine:
                 )
 
                 with cuda_timer() as decode_elapsed:
-                    reconstructed_cache = self._build_cache_from_paged(paged_cache)
+                    reconstructed_cache = self._build_cache_from_paged(
+                        paged_cache)
 
                     outputs = self.model(
                         input_ids=next_token_tensor,
@@ -128,7 +131,8 @@ class PagedEngine:
                     )
                     logits = outputs.logits[:, -1, :]
 
-                    new_kv_pairs = self._extract_kv_from_cache(outputs.past_key_values)
+                    new_kv_pairs = self._extract_kv_from_cache(
+                        outputs.past_key_values)
                     for layer_idx, (k, v) in enumerate(new_kv_pairs):
                         new_k = k[:, :, -1:, :]
                         new_v = v[:, :, -1:, :]

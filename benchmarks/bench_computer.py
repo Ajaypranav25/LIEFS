@@ -75,7 +75,8 @@ def run_benchmark(
     print(
         f"  VRAM:      {hw.vram_total_mb:.1f} MB Total ({hw.vram_free_mb:.1f} MB Free)"
     )
-    print(f"  PyTorch:   {hw.pytorch_version} (CUDA: {hw.cuda_version or 'N/A'})\n")
+    print(
+        f"  PyTorch:   {hw.pytorch_version} (CUDA: {hw.cuda_version or 'N/A'})\n")
 
     # 2. Load Model
     print(f"[2/5] Loading model {model_name!r} on {device} ({precision})...")
@@ -89,7 +90,8 @@ def run_benchmark(
     load_time_sec = round(time.perf_counter() - t0, 2)
     meta = get_model_metadata(model, tokenizer, model_name)
     print(f"  Load Time: {load_time_sec}s")
-    print(f"  Parameters: {meta.parameter_count:,} ({meta.parameter_count_m}M)")
+    print(
+        f"  Parameters: {meta.parameter_count:,} ({meta.parameter_count_m}M)")
     print(
         f"  Architecture: {meta.num_layers} Layers | {meta.num_attention_heads} Q Heads | {meta.num_kv_heads} KV Heads | Head Dim {meta.head_dim}"
     )
@@ -102,7 +104,8 @@ def run_benchmark(
     kv_engine = KVCacheEngine(model, tokenizer)
     naive_engine = NaiveEngine(model, tokenizer)
     try:
-        paged_engine = PagedEngine(model, tokenizer, block_size=16, max_num_blocks=256)
+        paged_engine = PagedEngine(
+            model, tokenizer, block_size=16, max_num_blocks=256)
     except Exception as e:  # noqa: BLE001
         print(f"  Paged Engine initialization notice: {e}")
         paged_engine = None
@@ -112,7 +115,8 @@ def run_benchmark(
     test_prompt = (
         "Explain how transformer self-attention works step by step in plain terms."
     )
-    input_ids = format_chat_prompt(tokenizer, test_prompt, device=meta.device_str)
+    input_ids = format_chat_prompt(
+        tokenizer, test_prompt, device=meta.device_str)
     prompt_tokens = input_ids.shape[1]
 
     print(
@@ -152,7 +156,8 @@ def run_benchmark(
     print("  Testing Stage 1: Naive Full-Recomputation Baseline...")
     torch.cuda.empty_cache() if torch.cuda.is_available() else None
     reset_vram_stats()
-    _gen_ids, m_naive = naive_engine.generate(input_ids, max_new_tokens=max_tokens)
+    _gen_ids, m_naive = naive_engine.generate(
+        input_ids, max_new_tokens=max_tokens)
     bw_naive = calculate_effective_memory_bandwidth(
         meta.memory_footprint_mb, m_naive.tokens_per_sec
     )
@@ -177,7 +182,8 @@ def run_benchmark(
         print("  Testing Stage 4: Paged Attention Pool...")
         torch.cuda.empty_cache() if torch.cuda.is_available() else None
         reset_vram_stats()
-        _gen_ids, m_paged = paged_engine.generate(input_ids, max_new_tokens=max_tokens)
+        _gen_ids, m_paged = paged_engine.generate(
+            input_ids, max_new_tokens=max_tokens)
         bw_paged = calculate_effective_memory_bandwidth(
             meta.memory_footprint_mb, m_paged.tokens_per_sec
         )
@@ -208,7 +214,8 @@ def run_benchmark(
                 model, tokenizer, max_batch_size=b_size
             )
             for req_i in range(b_size):
-                scheduler.add_request(f"What is {req_i} + {req_i}?", max_new_tokens=32)
+                scheduler.add_request(
+                    f"What is {req_i} + {req_i}?", max_new_tokens=32)
 
             t_start = time.perf_counter()
             req_metrics = scheduler.run_until_complete()
@@ -244,7 +251,8 @@ def run_benchmark(
 
     # Display Results Table
     print("\n" + "=" * 102)
-    print(f"  BENCHMARK RESULTS: {model_name} on {hw.cpu_model} / {hw.gpu_name}")
+    print(
+        f"  BENCHMARK RESULTS: {model_name} on {hw.cpu_model} / {hw.gpu_name}")
     print("=" * 102)
     print(
         f"| {'Engine / Optimization':<30} | {'Throughput':<12} | {'TTFT':<10} | {'TPOT':<10} | {'VRAM':<10} | {'Bandwidth':<10} | {'Speedup':<8} |"
@@ -278,7 +286,8 @@ def run_benchmark(
     )
     print(f"  Hardware Tier:                     {score_data['tier']}")
     print(f"  Effective Memory Bandwidth:        {bw_kv} GB/s")
-    print(f"  KV-Cache Elimination Speedup:      {speedup_kv}x faster than Naive")
+    print(
+        f"  KV-Cache Elimination Speedup:      {speedup_kv}x faster than Naive")
     print("#" * 70 + "\n")
 
     report_payload = {

@@ -34,9 +34,11 @@ def benchmark_engine(engine, engine_name: str) -> dict[str, list[GenerationMetri
         run_metrics = []
         for run_idx in range(NUM_RUNS):
             torch.cuda.empty_cache()
-            gen_ids, metrics = engine.generate(input_ids, max_new_tokens=max_tokens)
+            gen_ids, metrics = engine.generate(
+                input_ids, max_new_tokens=max_tokens)
             if run_idx == 0:
-                text = engine.tokenizer.decode(gen_ids, skip_special_tokens=True)
+                text = engine.tokenizer.decode(
+                    gen_ids, skip_special_tokens=True)
                 print(f"  Output: {text[:120]!r}...")
             run_metrics.append(metrics)
         results[name] = run_metrics
@@ -50,14 +52,16 @@ def main():
     model, tokenizer = load_model_and_tokenizer()
 
     kv_engine = KVCacheEngine(model, tokenizer)
-    paged_engine = PagedEngine(model, tokenizer, block_size=16, max_num_blocks=256)
+    paged_engine = PagedEngine(
+        model, tokenizer, block_size=16, max_num_blocks=256)
 
     print(
         f"\nBlock allocator: {paged_engine.allocator.num_blocks} blocks x "
         f"{paged_engine.block_size} tokens = "
         f"{paged_engine.allocator.num_blocks * paged_engine.block_size} max tokens"
     )
-    print(f"Block pool memory: {paged_engine.allocator.total_memory_mb:.1f} MB")
+    print(
+        f"Block pool memory: {paged_engine.allocator.total_memory_mb:.1f} MB")
 
     print("\n>>> KV-Cache engine benchmark...")
     kv_results = benchmark_engine(kv_engine, "KV-Cache")
@@ -86,7 +90,8 @@ def main():
         print(f"\n  Prompt: {name!r}")
         print(f"    {'Metric':<20} {'Contiguous':>12} {'Paged':>12}")
         print(f"    {'-' * 44}")
-        print(f"    {'Throughput (tok/s)':<20} {kv_tps:>12.2f} {paged_tps:>12.2f}")
+        print(
+            f"    {'Throughput (tok/s)':<20} {kv_tps:>12.2f} {paged_tps:>12.2f}")
         print(f"    {'TPOT (ms)':<20} {kv_tpot:>12.2f} {paged_tpot:>12.2f}")
         print(f"    {'Peak VRAM (MB)':<20} {kv_vram:>12.2f} {paged_vram:>12.2f}")
 

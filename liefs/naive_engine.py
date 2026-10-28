@@ -144,7 +144,8 @@ class NaiveEngine:
                 [next_token_id], skip_special_tokens=False
             )
 
-            running_metrics = self._compute_metrics(token_times_ms, len(generated_ids))
+            running_metrics = self._compute_metrics(
+                token_times_ms, len(generated_ids))
             metrics_dict = {
                 "ttft_ms": round(running_metrics.ttft_ms, 2),
                 "tpot_ms": round(running_metrics.tpot_ms, 2),
@@ -165,7 +166,8 @@ class NaiveEngine:
             )
             current_ids = torch.cat([current_ids, next_token_tensor], dim=1)
 
-        final_metrics = self._compute_metrics(token_times_ms, len(generated_ids))
+        final_metrics = self._compute_metrics(
+            token_times_ms, len(generated_ids))
         final_metrics_dict = {
             "ttft_ms": round(final_metrics.ttft_ms, 2),
             "tpot_ms": round(final_metrics.tpot_ms, 2),
@@ -194,5 +196,6 @@ class NaiveEngine:
 
         input_ids = format_chat_prompt(self.tokenizer, prompt, system_message)
         generated_ids, metrics = self.generate(input_ids, max_new_tokens)
-        generated_text = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
+        generated_text = self.tokenizer.decode(
+            generated_ids, skip_special_tokens=True)
         return generated_text, metrics

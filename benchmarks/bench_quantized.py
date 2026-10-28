@@ -34,10 +34,12 @@ def benchmark_engine(engine, engine_name: str) -> dict[str, list[GenerationMetri
         run_metrics = []
         for run_idx in range(NUM_RUNS):
             torch.cuda.empty_cache()
-            gen_ids, metrics = engine.generate(input_ids, max_new_tokens=max_tokens)
+            gen_ids, metrics = engine.generate(
+                input_ids, max_new_tokens=max_tokens)
 
             if run_idx == 0:
-                text = engine.tokenizer.decode(gen_ids, skip_special_tokens=True)
+                text = engine.tokenizer.decode(
+                    gen_ids, skip_special_tokens=True)
                 preview = text[:150] + "..." if len(text) > 150 else text
                 print(f"  Output: {preview!r}")
 
