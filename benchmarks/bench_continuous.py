@@ -24,7 +24,8 @@ def generate_workload(tokenizer, n_requests: int = 8) -> list[tuple[torch.Tensor
     """Create a workload of n_requests by cycling through benchmark prompts."""
     workload = []
     for i in range(n_requests):
-        _name, user_msg, max_tokens = BENCHMARK_PROMPTS[i % len(BENCHMARK_PROMPTS)]
+        _name, user_msg, max_tokens = BENCHMARK_PROMPTS[i % len(
+            BENCHMARK_PROMPTS)]
         input_ids = format_chat_prompt(tokenizer, user_msg)
         workload.append((input_ids, max_tokens))
     return workload

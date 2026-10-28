@@ -54,12 +54,14 @@ def benchmark_naive_engine(engine: NaiveEngine) -> dict[str, list[GenerationMetr
             # Clear CUDA cache between runs for clean VRAM measurement
             torch.cuda.empty_cache()
 
-            text_ids, metrics = engine.generate(input_ids, max_new_tokens=max_tokens)
+            text_ids, metrics = engine.generate(
+                input_ids, max_new_tokens=max_tokens)
             run_metrics.append(metrics)
 
             # Print generated text on first run only (for sanity checking)
             if run_idx == 0:
-                text = engine.tokenizer.decode(text_ids, skip_special_tokens=True)
+                text = engine.tokenizer.decode(
+                    text_ids, skip_special_tokens=True)
                 preview = text[:200] + "..." if len(text) > 200 else text
                 print(f"  Output preview: {preview!r}")
 
@@ -78,13 +80,15 @@ def benchmark_hf_generate(model, tokenizer) -> dict[str, list[GenerationMetrics]
     results: dict[str, list[GenerationMetrics]] = {}
 
     for name, user_msg, max_tokens in BENCHMARK_PROMPTS:
-        print(f"\n--- [HF generate] Prompt: {name!r} (max_new_tokens={max_tokens}) ---")
+        print(
+            f"\n--- [HF generate] Prompt: {name!r} (max_new_tokens={max_tokens}) ---")
         input_ids = format_chat_prompt(tokenizer, user_msg)
         prompt_len = input_ids.shape[1]
 
         # Warm-up
         with torch.no_grad():
-            model.generate(input_ids, max_new_tokens=max_tokens, do_sample=False)
+            model.generate(input_ids, max_new_tokens=max_tokens,
+                           do_sample=False)
 
         run_metrics: list[GenerationMetrics] = []
         for run_idx in range(NUM_RUNS):
@@ -162,14 +166,16 @@ def print_summary(
             hf_mean_tps = statistics.mean(hf_tps)
             naive_mean_tps = statistics.mean(tps)
             speedup = (
-                hf_mean_tps / naive_mean_tps if naive_mean_tps > 0 else float("inf")
+                hf_mean_tps /
+                naive_mean_tps if naive_mean_tps > 0 else float("inf")
             )
 
             print("    --- HF generate ---")
             print(
                 f"    HF Throughput    : {hf_mean_tps:>8.2f} tok/s  ({speedup:.1f}x faster)"
             )
-            print(f"    HF Peak VRAM     : {statistics.mean(hf_vrams):>8.2f} MB")
+            print(
+                f"    HF Peak VRAM     : {statistics.mean(hf_vrams):>8.2f} MB")
 
 
 def main():

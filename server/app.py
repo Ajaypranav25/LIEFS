@@ -119,7 +119,8 @@ def instantiate_engines(
         quantized_engine = None
 
     try:
-        paged_engine = PagedEngine(model, tokenizer, block_size=16, max_num_blocks=256)
+        paged_engine = PagedEngine(
+            model, tokenizer, block_size=16, max_num_blocks=256)
     except Exception as e:  # noqa: BLE001
         print(f"Paged engine notice: {e}")
         paged_engine = None
@@ -352,7 +353,8 @@ async def create_completion(request: CompletionRequest):
         engine = app_state.get("kv_engine") or KVCacheEngine(model, tokenizer)
 
     device_str = "cuda" if next(model.parameters()).is_cuda else "cpu"
-    prompt_tensor = format_chat_prompt(tokenizer, request.prompt, device=device_str)
+    prompt_tensor = format_chat_prompt(
+        tokenizer, request.prompt, device=device_str)
     prompt_len = prompt_tensor.shape[1]
     response_id = f"cmpl-{uuid.uuid4().hex}"
     current_model_name = app_state.get("model_name", DEFAULT_MODEL_NAME)
@@ -399,7 +401,8 @@ async def create_completion(request: CompletionRequest):
                         }
                         yield f"data: {json.dumps(chunk)}\n\n"
                         yield "data: [DONE]\n\n"
-                        app_state.setdefault("recent_metrics", []).append(metrics_dict)
+                        app_state.setdefault(
+                            "recent_metrics", []).append(metrics_dict)
                         break
                     else:
                         chunk = {
@@ -409,7 +412,8 @@ async def create_completion(request: CompletionRequest):
                             "model": current_model_name,
                             "engine": engine_type,
                             "choices": [
-                                {"text": token_text, "index": 0, "finish_reason": None}
+                                {"text": token_text, "index": 0,
+                                    "finish_reason": None}
                             ],
                             "metrics": metrics_dict,
                         }
@@ -439,7 +443,8 @@ async def create_completion(request: CompletionRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
     generated_text = tokenizer.decode(generated_ids, skip_special_tokens=True)
-    finish_reason = "length" if len(generated_ids) >= request.max_tokens else "stop"
+    finish_reason = "length" if len(
+        generated_ids) >= request.max_tokens else "stop"
 
     usage = CompletionUsage(
         prompt_tokens=prompt_len,
@@ -464,7 +469,8 @@ async def create_completion(request: CompletionRequest):
         created=int(time.time()),
         model=current_model_name,
         choices=[
-            CompletionChoice(text=generated_text, index=0, finish_reason=finish_reason)
+            CompletionChoice(text=generated_text, index=0,
+                             finish_reason=finish_reason)
         ],
         usage=usage,
         metrics=metrics_dict,
@@ -607,7 +613,8 @@ async def run_computer_benchmark(request: ComputerBenchmarkRequest):
     hw = get_hardware_profile()
 
     device_str = "cuda" if next(model.parameters()).is_cuda else "cpu"
-    input_ids = format_chat_prompt(tokenizer, request.prompt, device=device_str)
+    input_ids = format_chat_prompt(
+        tokenizer, request.prompt, device=device_str)
     prompt_len = input_ids.shape[1]
 
     results: list[BenchmarkEngineResult] = []
@@ -615,11 +622,13 @@ async def run_computer_benchmark(request: ComputerBenchmarkRequest):
 
     # 1. Naive Baseline (Stage 1)
     if "naive" in request.engines:
-        naive_eng = app_state.get("naive_engine") or NaiveEngine(model, tokenizer)
+        naive_eng = app_state.get(
+            "naive_engine") or NaiveEngine(model, tokenizer)
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
         reset_vram_stats()
-        gen_ids, m = naive_eng.generate(input_ids, max_new_tokens=request.max_tokens)
+        gen_ids, m = naive_eng.generate(
+            input_ids, max_new_tokens=request.max_tokens)
         text = tokenizer.decode(gen_ids, skip_special_tokens=True)
         naive_time = m.total_time_ms
         bw = calculate_effective_memory_bandwidth(
@@ -649,7 +658,8 @@ async def run_computer_benchmark(request: ComputerBenchmarkRequest):
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
         reset_vram_stats()
-        gen_ids, m = kv_eng.generate(input_ids, max_new_tokens=request.max_tokens)
+        gen_ids, m = kv_eng.generate(
+            input_ids, max_new_tokens=request.max_tokens)
         text = tokenizer.decode(gen_ids, skip_special_tokens=True)
         kv_metrics = m
         speedup = (
@@ -683,7 +693,8 @@ async def run_computer_benchmark(request: ComputerBenchmarkRequest):
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
         reset_vram_stats()
-        gen_ids, m = paged_eng.generate(input_ids, max_new_tokens=request.max_tokens)
+        gen_ids, m = paged_eng.generate(
+            input_ids, max_new_tokens=request.max_tokens)
         text = tokenizer.decode(gen_ids, skip_special_tokens=True)
         speedup = (
             round((naive_time / m.total_time_ms), 2)
@@ -749,7 +760,8 @@ async def run_computer_benchmark(request: ComputerBenchmarkRequest):
         else (results[0].tokens_per_sec if results else 0.0)
     )
     benchmark_ttft = (
-        kv_metrics.ttft_ms if kv_metrics else (results[0].ttft_ms if results else 0.0)
+        kv_metrics.ttft_ms if kv_metrics else (
+            results[0].ttft_ms if results else 0.0)
     )
     bw_primary = calculate_effective_memory_bandwidth(
         meta.memory_footprint_mb, benchmark_tok_s

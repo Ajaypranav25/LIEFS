@@ -66,7 +66,8 @@ def get_cpu_name() -> str:
             import subprocess
 
             return (
-                subprocess.check_output(["sysctl", "-n", "machdep.cpu.brand_string"])
+                subprocess.check_output(
+                    ["sysctl", "-n", "machdep.cpu.brand_string"])
                 .decode()
                 .strip()
             )
@@ -117,8 +118,10 @@ def get_hardware_profile() -> HardwareProfile:
         compute_cap = f"{cap[0]}.{cap[1]}"
         props = torch.cuda.get_device_properties(0)
         vram_total_mb = round(props.total_memory / (1024 * 1024), 2)
-        vram_allocated_mb = round(torch.cuda.memory_allocated(0) / (1024 * 1024), 2)
-        vram_reserved_mb = round(torch.cuda.memory_reserved(0) / (1024 * 1024), 2)
+        vram_allocated_mb = round(
+            torch.cuda.memory_allocated(0) / (1024 * 1024), 2)
+        vram_reserved_mb = round(
+            torch.cuda.memory_reserved(0) / (1024 * 1024), 2)
         vram_free_mb = round(vram_total_mb - vram_allocated_mb, 2)
         vram_usage_pct = (
             round((vram_allocated_mb / vram_total_mb * 100), 1)

@@ -49,7 +49,8 @@ class TestDeterminism:
 
     def test_same_prompt_same_output(self, engine, tokenizer):
         """Running the same prompt twice must produce identical token sequences."""
-        input_ids = format_chat_prompt(tokenizer, "What is the capital of France?")
+        input_ids = format_chat_prompt(
+            tokenizer, "What is the capital of France?")
 
         ids_1, _ = engine.generate(input_ids, max_new_tokens=32)
         ids_2, _ = engine.generate(input_ids, max_new_tokens=32)
@@ -68,7 +69,8 @@ class TestEOS:
         """Short answers should stop before max_new_tokens."""
         input_ids = format_chat_prompt(tokenizer, "What is 2+2?")
 
-        _generated_ids, metrics = engine.generate(input_ids, max_new_tokens=256)
+        _generated_ids, metrics = engine.generate(
+            input_ids, max_new_tokens=256)
 
         # A simple math answer should NOT use all 256 tokens
         assert metrics.total_tokens_generated < 256, (
@@ -104,7 +106,8 @@ class TestCoherence:
 
     def test_nonempty_output(self, engine, tokenizer):
         """Generation should produce at least some text."""
-        input_ids = format_chat_prompt(tokenizer, "Tell me a fact about the moon.")
+        input_ids = format_chat_prompt(
+            tokenizer, "Tell me a fact about the moon.")
 
         generated_ids, _ = engine.generate(input_ids, max_new_tokens=64)
         text = tokenizer.decode(generated_ids, skip_special_tokens=True)
@@ -122,7 +125,8 @@ class TestMaxTokens:
             tokenizer, "Write a very long essay about the history of computing."
         )
 
-        generated_ids, _metrics = engine.generate(input_ids, max_new_tokens=max_tokens)
+        generated_ids, _metrics = engine.generate(
+            input_ids, max_new_tokens=max_tokens)
 
         assert len(generated_ids) <= max_tokens, (
             f"Generated {len(generated_ids)} tokens, max was {max_tokens}"
@@ -155,7 +159,8 @@ class TestMetrics:
 
     def test_ttft_less_than_total(self, engine, tokenizer):
         """TTFT should be less than total generation time."""
-        input_ids = format_chat_prompt(tokenizer, "Explain gravity in one sentence.")
+        input_ids = format_chat_prompt(
+            tokenizer, "Explain gravity in one sentence.")
 
         _, metrics = engine.generate(input_ids, max_new_tokens=64)
 

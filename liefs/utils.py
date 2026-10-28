@@ -123,7 +123,8 @@ def compute_generation_metrics(
     else:
         tpot = 0.0
 
-    tokens_per_sec = (num_generated / total_time * 1000.0) if total_time > 0 else 0.0
+    tokens_per_sec = (num_generated / total_time *
+                      1000.0) if total_time > 0 else 0.0
 
     return GenerationMetrics(
         ttft_ms=ttft,

@@ -102,7 +102,8 @@ class TestPagedKVCache:
         assert paged_engine.allocator.num_free_blocks == initial_free
 
     def test_deterministic(self, paged_engine, tokenizer):
-        input_ids = format_chat_prompt(tokenizer, "What is the speed of light?")
+        input_ids = format_chat_prompt(
+            tokenizer, "What is the speed of light?")
 
         ids_1, _ = paged_engine.generate(input_ids, max_new_tokens=32)
         ids_2, _ = paged_engine.generate(input_ids, max_new_tokens=32)

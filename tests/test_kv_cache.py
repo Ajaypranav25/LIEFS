@@ -68,7 +68,8 @@ class TestKVCacheCorrectness:
 
 class TestKVCacheDeterminism:
     def test_deterministic(self, kv_engine, tokenizer):
-        input_ids = format_chat_prompt(tokenizer, "What is the capital of France?")
+        input_ids = format_chat_prompt(
+            tokenizer, "What is the capital of France?")
 
         ids_1, _ = kv_engine.generate(input_ids, max_new_tokens=32)
         ids_2, _ = kv_engine.generate(input_ids, max_new_tokens=32)
@@ -79,7 +80,8 @@ class TestKVCacheDeterminism:
 class TestKVCacheEOS:
     def test_stops_at_eos(self, kv_engine, tokenizer):
         input_ids = format_chat_prompt(tokenizer, "What is 2+2?")
-        _generated_ids, metrics = kv_engine.generate(input_ids, max_new_tokens=256)
+        _generated_ids, metrics = kv_engine.generate(
+            input_ids, max_new_tokens=256)
 
         assert metrics.total_tokens_generated < 256
         assert metrics.total_tokens_generated > 0
@@ -103,7 +105,8 @@ class TestKVCacheMetrics:
     def test_tpot_less_than_ttft(self, kv_engine, tokenizer):
         """TPOT should be less than TTFT because decode steps process only
         1 token while prefill processes the entire prompt."""
-        input_ids = format_chat_prompt(tokenizer, "Write a short poem about the ocean.")
+        input_ids = format_chat_prompt(
+            tokenizer, "Write a short poem about the ocean.")
         _, metrics = kv_engine.generate(input_ids, max_new_tokens=64)
 
         if metrics.total_tokens_generated > 2:

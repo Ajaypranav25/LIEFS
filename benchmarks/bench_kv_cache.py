@@ -38,10 +38,12 @@ def benchmark_engine(engine, engine_name: str) -> dict[str, list[GenerationMetri
         run_metrics: list[GenerationMetrics] = []
         for run_idx in range(NUM_RUNS):
             torch.cuda.empty_cache()
-            gen_ids, metrics = engine.generate(input_ids, max_new_tokens=max_tokens)
+            gen_ids, metrics = engine.generate(
+                input_ids, max_new_tokens=max_tokens)
 
             if run_idx == 0:
-                text = engine.tokenizer.decode(gen_ids, skip_special_tokens=True)
+                text = engine.tokenizer.decode(
+                    gen_ids, skip_special_tokens=True)
                 preview = text[:150] + "..." if len(text) > 150 else text
                 print(f"  Output: {preview!r}")
 
@@ -80,7 +82,8 @@ def print_comparison(
         n_toks = kv_list[0].total_tokens_generated
 
         print(f"\n  Prompt: {name!r} ({n_toks} tokens)")
-        print(f"    {'Metric':<20} {'Naive':>12} {'KV-Cache':>12} {'Speedup':>10}")
+        print(
+            f"    {'Metric':<20} {'Naive':>12} {'KV-Cache':>12} {'Speedup':>10}")
         print(f"    {'-' * 54}")
         print(
             f"    {'Throughput (tok/s)':<20} {naive_tps:>12.2f} {kv_tps:>12.2f} {speedup:>9.1f}x"

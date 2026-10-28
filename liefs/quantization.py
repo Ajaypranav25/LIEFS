@@ -27,13 +27,15 @@ class QuantizedLinear(nn.Module):
 
         # Store quantized weights as int8
         self.register_buffer(
-            "weight", torch.zeros((out_features, in_features), dtype=torch.int8)
+            "weight", torch.zeros(
+                (out_features, in_features), dtype=torch.int8)
         )
         # Store scales as original dtype (usually float16)
         self.register_buffer("scale", torch.zeros(out_features, dtype=dtype))
 
         if bias:
-            self.register_buffer("bias", torch.zeros(out_features, dtype=dtype))
+            self.register_buffer(
+                "bias", torch.zeros(out_features, dtype=dtype))
         else:
             self.register_parameter("bias", None)
 
@@ -48,7 +50,8 @@ class QuantizedLinear(nn.Module):
         max_val = torch.max(torch.abs(weight), dim=1, keepdim=True).values
         scale = max_val.clamp(min=1e-5) / 127.0
 
-        quantized_weight = torch.round(weight / scale).clamp(-128, 127).to(torch.int8)
+        quantized_weight = torch.round(
+            weight / scale).clamp(-128, 127).to(torch.int8)
 
         q_linear = cls(
             linear.in_features,

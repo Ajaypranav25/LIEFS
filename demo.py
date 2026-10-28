@@ -47,7 +47,8 @@ def run_demo():
     print("-" * 80)
     naive_engine = NaiveEngine(model, tokenizer)
     torch.cuda.empty_cache()
-    gen_ids, metrics = naive_engine.generate(input_ids, max_new_tokens=max_tokens)
+    gen_ids, metrics = naive_engine.generate(
+        input_ids, max_new_tokens=max_tokens)
     text = tokenizer.decode(gen_ids, skip_special_tokens=True)
     print(f"\nGenerated text:\n{text.strip()}\n")
     print_metrics(metrics, "Naive Engine")
@@ -67,9 +68,11 @@ def run_demo():
     print("-" * 80)
     print("[Stage 4] Paged Attention Engine (16-token BlockAllocator Pool)")
     print("-" * 80)
-    paged_engine = PagedEngine(model, tokenizer, block_size=16, max_num_blocks=256)
+    paged_engine = PagedEngine(
+        model, tokenizer, block_size=16, max_num_blocks=256)
     torch.cuda.empty_cache()
-    gen_ids, metrics = paged_engine.generate(input_ids, max_new_tokens=max_tokens)
+    gen_ids, metrics = paged_engine.generate(
+        input_ids, max_new_tokens=max_tokens)
     text = tokenizer.decode(gen_ids, skip_special_tokens=True)
     print(f"\nGenerated text:\n{text.strip()}\n")
     print_metrics(metrics, "Paged Engine")

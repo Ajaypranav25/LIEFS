@@ -41,7 +41,8 @@ class CompletionResponse(BaseModel):
 
 
 class ModelLoadRequest(BaseModel):
-    model_name: str = Field(default="Qwen/Qwen2.5-0.5B-Instruct", max_length=256)
+    model_name: str = Field(
+        default="Qwen/Qwen2.5-0.5B-Instruct", max_length=256)
     precision: str = Field(default="float16", max_length=32)
     device: str = Field(default="auto", max_length=32)
     hf_token: str | None = Field(default=None, max_length=256)
