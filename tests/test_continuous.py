@@ -44,8 +44,7 @@ class TestSchedulerBasics:
         model, tok = model_and_tokenizer
         scheduler = ContinuousBatchScheduler(model, tok, max_batch_size=2)
 
-        prompts = ["What is 2+2?",
-                   "What is the capital of France?", "Say hello."]
+        prompts = ["What is 2+2?", "What is the capital of France?", "Say hello."]
         for prompt in prompts:
             input_ids = format_chat_prompt(tok, prompt)
             scheduler.add_request(input_ids, max_new_tokens=32)
