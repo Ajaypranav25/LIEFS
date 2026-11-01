@@ -150,12 +150,14 @@ def test_get_cpu_name_exception(mock_processor, mock_system):
     with patch("builtins.open", side_effect=FileNotFoundError):
         assert get_cpu_name() == "Generic CPU"
 
+
 @patch("platform.system", return_value="Linux")
 @patch("platform.processor", return_value="")
 def test_get_cpu_name_linux_no_model_name(mock_processor, mock_system):
     mock_cpuinfo = "processor\t: 0\nvendor_id\t: AuthenticAMD\n"
     with patch("builtins.open", mock_open(read_data=mock_cpuinfo)):
         assert get_cpu_name() == "Unknown CPU"
+
 
 @patch("platform.system", return_value="Unknown")
 @patch("platform.processor", return_value="")
