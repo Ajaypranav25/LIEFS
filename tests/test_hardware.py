@@ -108,13 +108,13 @@ def test_computer_score_tiers():
 def test_get_cpu_name_windows(mock_system):
     import sys
     from unittest.mock import MagicMock
+
     mock_winreg = MagicMock()
     _ = mock_winreg.OpenKey.return_value
-    mock_winreg.QueryValueEx.return_value = (
-        "Intel(R) Core(TM) i9 CPU  ", None)
+    mock_winreg.QueryValueEx.return_value = ("Intel(R) Core(TM) i9 CPU  ", None)
 
     # Patch winreg in sys.modules so the import winreg in hardware_profiler gets the mock
-    with patch.dict(sys.modules, {'winreg': mock_winreg}):
+    with patch.dict(sys.modules, {"winreg": mock_winreg}):
         assert get_cpu_name() == "Intel(R) Core(TM) i9 CPU"
 
 
@@ -122,10 +122,11 @@ def test_get_cpu_name_windows(mock_system):
 def test_get_cpu_name_darwin(mock_system):
     import sys
     from unittest.mock import MagicMock
+
     mock_subprocess = MagicMock()
     mock_subprocess.check_output.return_value = b"Apple M2 Max\n"
 
-    with patch.dict(sys.modules, {'subprocess': mock_subprocess}):
+    with patch.dict(sys.modules, {"subprocess": mock_subprocess}):
         assert get_cpu_name() == "Apple M2 Max"
 
 
@@ -148,3 +149,15 @@ def test_get_cpu_name_exception(mock_processor, mock_system):
     # Simulate an error (e.g. /proc/cpuinfo not found) to trigger the exception block
     with patch("builtins.open", side_effect=FileNotFoundError):
         assert get_cpu_name() == "Generic CPU"
+
+@patch("platform.system", return_value="Linux")
+@patch("platform.processor", return_value="")
+def test_get_cpu_name_linux_no_model_name(mock_processor, mock_system):
+    mock_cpuinfo = "processor\t: 0\nvendor_id\t: AuthenticAMD\n"
+    with patch("builtins.open", mock_open(read_data=mock_cpuinfo)):
+        assert get_cpu_name() == "Unknown CPU"
+
+@patch("platform.system", return_value="Unknown")
+@patch("platform.processor", return_value="")
+def test_get_cpu_name_fallback_empty(mock_processor, mock_system):
+    assert get_cpu_name() == "Unknown CPU"

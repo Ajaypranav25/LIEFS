@@ -146,14 +146,12 @@ class PagedKVCache:
             while block_idx >= len(self.block_table):
                 new_block = self.allocator.allocate()
                 if new_block is None:
-                    raise RuntimeError(
-                        "Out of KV-cache blocks in BlockAllocator!")
+                    raise RuntimeError("Out of KV-cache blocks in BlockAllocator!")
                 self.block_table.append(new_block)
 
             block = self.block_table[block_idx]
             block.key_cache[layer_idx, :, pos_in_block, :] = key[0, :, t, :]
-            block.value_cache[layer_idx, :,
-                              pos_in_block, :] = value[0, :, t, :]
+            block.value_cache[layer_idx, :, pos_in_block, :] = value[0, :, t, :]
 
         self.tokens_per_layer[layer_idx] += new_tokens
 

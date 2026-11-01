@@ -159,8 +159,7 @@ def load_model_and_tokenizer(
     target_device = resolve_device(device)
 
     print(f"Loading model: {model_name}")
-    print(
-        f"  Target precision: {target_dtype}, Target device: {target_device}")
+    print(f"  Target precision: {target_dtype}, Target device: {target_device}")
 
     # Set Hugging Face token if provided
     token = hf_token or os.environ.get("HF_TOKEN")
@@ -211,23 +210,18 @@ def get_model_metadata(
     param_count_m = round(param_count / 1e6, 2)
 
     # Generalized config extraction across Llama, Qwen, Gemma, Mistral, Phi, GPT-2
-    num_layers = getattr(config, "num_hidden_layers",
-                         getattr(config, "n_layer", 24))
-    hidden_size = getattr(config, "hidden_size",
-                          getattr(config, "n_embd", 1024))
-    num_heads = getattr(config, "num_attention_heads",
-                        getattr(config, "n_head", 16))
+    num_layers = getattr(config, "num_hidden_layers", getattr(config, "n_layer", 24))
+    hidden_size = getattr(config, "hidden_size", getattr(config, "n_embd", 1024))
+    num_heads = getattr(config, "num_attention_heads", getattr(config, "n_head", 16))
     num_kv_heads = getattr(
-        config, "num_key_value_heads", getattr(
-            config, "num_attention_heads", num_heads)
+        config, "num_key_value_heads", getattr(config, "num_attention_heads", num_heads)
     )
     head_dim = getattr(
         config, "head_dim", hidden_size // num_heads if num_heads > 0 else 64
     )
     vocab_size = getattr(config, "vocab_size", len(tokenizer))
     max_pos = getattr(
-        config, "max_position_embeddings", getattr(
-            config, "max_sequence_length", 4096)
+        config, "max_position_embeddings", getattr(config, "max_sequence_length", 4096)
     )
     archs = getattr(config, "architectures", ["CausalLM"])
 
@@ -241,8 +235,7 @@ def get_model_metadata(
     dtype_str = str(next(model.parameters()).dtype).replace("torch.", "")
 
     if device_str == "cuda" and torch.cuda.is_available():
-        memory_footprint_mb = round(
-            torch.cuda.memory_allocated() / (1024 * 1024), 1)
+        memory_footprint_mb = round(torch.cuda.memory_allocated() / (1024 * 1024), 1)
     else:
         memory_footprint_mb = fp16_mb
 

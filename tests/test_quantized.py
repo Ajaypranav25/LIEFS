@@ -58,8 +58,7 @@ class TestQuantization:
     def test_linear_layers_quantized(self, loaded_components):
         """At least the decoder layers should be replaced by QuantizedLinear."""
         model = loaded_components["model"]
-        q_count = sum(1 for m in model.modules()
-                      if isinstance(m, QuantizedLinear))
+        q_count = sum(1 for m in model.modules() if isinstance(m, QuantizedLinear))
         assert q_count > 0, "No QuantizedLinear layers found in model"
 
     def test_quantized_output_coherent(self, loaded_components):
@@ -78,8 +77,7 @@ class TestQuantization:
         engine = loaded_components["engine"]
         tokenizer = loaded_components["tokenizer"]
 
-        input_ids = format_chat_prompt(
-            tokenizer, "Explain gravity in one sentence.")
+        input_ids = format_chat_prompt(tokenizer, "Explain gravity in one sentence.")
         ids_1, _ = engine.generate(input_ids, max_new_tokens=32)
         ids_2, _ = engine.generate(input_ids, max_new_tokens=32)
 

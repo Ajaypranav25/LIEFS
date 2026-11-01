@@ -78,8 +78,7 @@ class ContinuousBatchScheduler:
 
         # EOS tokens
         self.eos_token_ids: set[int] = (
-            eos_token_ids if eos_token_ids is not None else get_eos_token_ids(
-                tokenizer)
+            eos_token_ids if eos_token_ids is not None else get_eos_token_ids(tokenizer)
         )
 
         # Request management
