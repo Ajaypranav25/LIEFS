@@ -56,7 +56,7 @@ from server.schemas import (
 )
 
 # Global runtime state
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 app_state: Dict[str, Any] = {
     "model_name": DEFAULT_MODEL_NAME,
