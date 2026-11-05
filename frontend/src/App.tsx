@@ -239,7 +239,7 @@ const AppContent: React.FC = () => {
     saveChatSessionToDb(updatedSession, user?.id).catch(console.warn);
     saveChatMessageToDb(currentSession.id, userMsg, user?.id).catch(console.warn);
 
-    let fullText = '';
+    let fullTextRef = { current: '' };
 
     try {
       const cancelFn = await streamCompletion(
@@ -251,7 +251,7 @@ const AppContent: React.FC = () => {
         },
         {
           onToken: (token: string, metrics?: GenerationMetrics) => {
-            fullText += token;
+            fullTextRef.current += token;
             setSessions((prev) =>
               prev.map((s) => {
                 if (s.id === currentSession.id) {
@@ -261,7 +261,7 @@ const AppContent: React.FC = () => {
                       if (m.id === assistantMsgId) {
                         return {
                           ...m,
-                          content: fullText,
+                          content: fullTextRef.current,
                           metrics: metrics || m.metrics,
                         };
                       }
@@ -298,7 +298,7 @@ const AppContent: React.FC = () => {
             const finalAssistantMsg: ChatMessage = {
               id: assistantMsgId,
               role: 'assistant',
-              content: completedText || fullText,
+              content: completedText || fullTextRef.current,
               timestamp: Date.now(),
               engine,
               metrics: finalMetrics,
