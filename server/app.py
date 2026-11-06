@@ -17,6 +17,9 @@ import time
 import uuid
 from contextlib import asynccontextmanager
 
+# Global runtime state
+from typing import Any
+
 import torch
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -55,10 +58,7 @@ from server.schemas import (
     ModelLoadResponse,
 )
 
-# Global runtime state
-from typing import Any, Dict
-
-app_state: Dict[str, Any] = {
+app_state: dict[str, Any] = {
     "model_name": DEFAULT_MODEL_NAME,
     "model": None,
     "tokenizer": None,
